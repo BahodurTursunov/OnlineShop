@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{87046D7F-5470-4A3B-AB07-A3DD5BD86248}"
+	ProjectSection(ProjectDependencies) = postProject
+		{82D03042-0F93-4368-B349-C5FDD1A6F24D} = {82D03042-0F93-4368-B349-C5FDD1A6F24D}
+		{C0302D6E-435A-497A-841F-E5AB6B5A22C9} = {C0302D6E-435A-497A-841F-E5AB6B5A22C9}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BaseLibrary", "BaseLibrary\BaseLibrary.csproj", "{82D03042-0F93-4368-B349-C5FDD1A6F24D}"
 EndProject
@@ -30,5 +34,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BE22FB90-F3E0-423E-97D9-B76743BEB81A}
 	EndGlobalSection
 EndGlobal
