@@ -4,8 +4,8 @@ using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("[controller]")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -18,7 +18,7 @@ namespace Server.Controllers
         }
 
         // POST: api/User
-        [HttpPost]
+        [HttpPost("Create user")]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
             try
@@ -42,7 +42,7 @@ namespace Server.Controllers
         }
 
         // GET: api/User
-        [HttpGet]
+        [HttpGet("Get all users")]
         public ActionResult<IEnumerable<User>> GetAllUsers()
         {
             try
@@ -60,7 +60,7 @@ namespace Server.Controllers
         }
 
         // GET: api/User/{id}
-        [HttpGet("{id}")]
+        [HttpGet("Get by {id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
             try
@@ -82,7 +82,7 @@ namespace Server.Controllers
         }
 
         // PUT: api/User/{id}
-        [HttpPut("{id}")]
+        [HttpPut("Update user by {id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
             try
@@ -110,7 +110,7 @@ namespace Server.Controllers
         }
 
         // DELETE: api/User/{id}
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete user by {id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             try
