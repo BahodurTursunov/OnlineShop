@@ -17,7 +17,6 @@ namespace Server.Controllers
             _logger = logger;
         }
 
-        // POST: api/User
         [HttpPost("Create user")]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
@@ -37,11 +36,10 @@ namespace Server.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка при создании пользователя.");
-                return StatusCode(500, "Внутренняя ошибка сервера.");
+                return StatusCode(500, "Не корректно введенные данные, либо человек с такой почтой уже зарегистрирован");
             }
         }
 
-        // GET: api/User
         [HttpGet("Get all users")]
         public ActionResult<IEnumerable<User>> GetAllUsers()
         {
@@ -59,8 +57,7 @@ namespace Server.Controllers
             }
         }
 
-        // GET: api/User/{id}
-        [HttpGet("Get by {id}")]
+        [HttpGet("Get by id")]
         public async Task<IActionResult> GetUserById(int id)
         {
             try

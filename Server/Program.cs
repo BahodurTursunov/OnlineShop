@@ -3,6 +3,10 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using ServerLibrary.Data;
 using ServerLibrary.DI;
+using ServerLibrary.Repositories.Contracts;
+using ServerLibrary.Repositories.Implementations;
+using ServerLibrary.Services.Contracts;
+using ServerLibrary.Services.Implementations;
 
 namespace Server
 {
@@ -27,7 +31,9 @@ namespace Server
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
 
-            builder.Services.AddServices();
+            builder.Services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
+            builder.Services.AddScoped<IUserService, UserService>();
+            //builder.Services.AddServices();
 
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
