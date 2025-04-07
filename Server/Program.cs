@@ -1,12 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using ServerLibrary.Data;
-using ServerLibrary.DI;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Implementations;
+using System.Text;
 
 namespace Server
 {
@@ -69,6 +71,24 @@ namespace Server
 
             });
 
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    };
+
+                });
+            builder.Services.AddAuthorization();
+
+
             // Добавляем JWT-аутентификацию
 
             var app = builder.Build();
@@ -81,6 +101,8 @@ namespace Server
             ;
             app.UseRouting();
 
+            app.UseMiddleware<GlobalExceptionMiddleware>();
+            //app.UseMiddleware<UserameExitstExeptionMiddleware>();
 
             app.UseHttpsRedirection();
             app.UseAuthorization();

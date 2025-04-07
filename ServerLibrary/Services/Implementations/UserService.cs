@@ -3,6 +3,7 @@ using BaseLibrary.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
+using ServerLibrary.Exceptions;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
 
@@ -15,41 +16,38 @@ namespace ServerLibrary.Services.Implementations
         private readonly ApplicationDbContext _db = db;
         public async Task<User> Create(User entity)
         {
-            try
+            _logger.LogInformation($"Попытка добавления пользователя {entity.Username} в базу данных");
+
+            // Валидация полей
+            if (string.IsNullOrWhiteSpace(entity.Username) || string.IsNullOrWhiteSpace(entity.Email))
             {
-                _logger.LogInformation($"Попытка добавления пользователя {entity.Username} в базу данных");
-
-                if (string.IsNullOrWhiteSpace(entity.Username) || string.IsNullOrWhiteSpace(entity.Email))
-                {
-                    _logger.LogWarning("Ошибка валидации: Username и Email обязательны.");
-                    throw new ArgumentException("Username и Email не могут быть пустыми.");
-                }
-
-                if (await _db.Users.AnyAsync(u => u.Username == entity.Username))
-                {
-                    _logger.LogWarning($"Пользователь с логином {entity.Username} уже существует.");
-                    throw new ArgumentException($"Пользователь с логином {entity.Username} уже существует.");
-                }
-
-                if (await _db.Users.AnyAsync(e => e.Email == entity.Email))
-                {
-                    _logger.LogWarning($"Попытка создания пользователя с уже существующим Email: {entity.Email}");
-                    throw new InvalidOperationException("Пользователь с таким Email уже существует.");
-                }
-
-                entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);
-
-                await _repository.CreateAsync(entity);
-
-                _logger.LogInformation($"Пользователь {entity.Username} успешно добавлен в базу данных");
-                return entity;
+                _logger.LogWarning("Ошибка валидации: Username и Email обязательны.");
+                throw new ArgumentException("Username и Email не могут быть пустыми.");
             }
-            catch (Exception ex)
+
+            // Проверка существования пользователя
+            if (await _db.Users.AnyAsync(u => u.Username == entity.Username))
             {
-                _logger.LogError(ex, $"Ошибка при добавлении пользователя {entity.Username} в базу данных");
-                throw;
+                _logger.LogWarning($"Пользователь с логином {entity.Username} уже существует.");
+                throw new UsernameAlreadyExitstException($"Пользователь с логином {entity.Username} уже существует.");
             }
+
+            if (await _db.Users.AnyAsync(e => e.Email == entity.Email))
+            {
+                _logger.LogWarning($"Попытка создания пользователя с уже существующим Email: {entity.Email}");
+                throw new UserMailAlreadyExistException("Пользователь с таким Email уже существует.");
+            }
+
+            // Хэширование пароля
+            entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);
+
+            // Сохранение пользователя
+            await _repository.CreateAsync(entity);
+
+            _logger.LogInformation($"Пользователь {entity.Username} успешно добавлен в базу данных");
+            return entity;
         }
+
 
         public async Task<User> Delete(int id)
         {

@@ -25,7 +25,7 @@ namespace BaseLibrary.Entities
         public string PasswordHash { get; set; } = "";
         public int RoleId { get; set; } = 0;
         //public Role Role { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         [JsonIgnore]
         public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
