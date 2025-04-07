@@ -1,5 +1,4 @@
 ﻿using BaseLibrary.Entities;
-using BaseLibrary.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
@@ -37,11 +36,8 @@ namespace ServerLibrary.Services.Implementations
                     throw new InvalidOperationException("Пользователь с таким Email уже существует.");
                 }
 
-                var user = await _repository.CreateAsync(new Register()
-                {
-                    Username = user.,
-                    //TODO : добавить хеширование пароля
-                });
+                entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);
+                await _repository.CreateAsync(entity);
 
                 _logger.LogInformation($"Пользователь {entity.Username} успешно добавлен в базу данных");
                 return entity;
