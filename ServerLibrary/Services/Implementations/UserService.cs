@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
+using ServerLibrary.Exceptions;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
 
@@ -27,13 +28,13 @@ namespace ServerLibrary.Services.Implementations
                 if (await _db.Users.AnyAsync(u => u.Username == entity.Username))
                 {
                     _logger.LogWarning($"Пользователь с логином {entity.Username} уже существует.");
-                    throw new ArgumentException($"Пользователь с логином {entity.Username} уже существует.");
+                    throw new UsernameAlreadyExitstException($"Пользователь с логином {entity.Username} уже существует.");
                 }
 
                 if (await _db.Users.AnyAsync(e => e.Email == entity.Email))
                 {
                     _logger.LogWarning($"Попытка создания пользователя с уже существующим Email: {entity.Email}");
-                    throw new InvalidOperationException("Пользователь с таким Email уже существует.");
+                    throw new UserMailAlreadyExistException("Пользователь с таким Email уже существует.");
                 }
 
                 entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);
@@ -53,23 +54,23 @@ namespace ServerLibrary.Services.Implementations
         {
             try
             {
-                _logger.LogInformation("Попытка удаления пользователя ID: {Id}", id);
+                _logger.LogInformation($"Попытка удаления пользователя ID: {id}");
 
                 var user = await _repository.GetById(id);
                 if (user == null)
                 {
-                    _logger.LogWarning("Пользователь с ID {Id} не найден", id);
+                    _logger.LogWarning($"Пользователь с ID {id} не найден");
                     return null;
                 }
 
                 await _repository.DeleteAsync(id);
-                _logger.LogInformation("Пользователь ID {Id} успешно удален", id);
+                _logger.LogInformation($"Пользователь ID {id} успешно удален");
 
                 return user;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при удалении пользователя ID {Id}", id);
+                _logger.LogError(ex, $"Ошибка при удалении пользователя ID {id}");
                 throw;
             }
         }
@@ -110,8 +111,8 @@ namespace ServerLibrary.Services.Implementations
                 {
                     if (await _db.Users.AnyAsync(u => u.Username == entity.Username && u.Id != id))
                     {
-                        _logger.LogWarning("Попытка обновления на уже существующий Username: {Username}", entity.Username);
-                        throw new InvalidOperationException("Пользователь с таким Username уже существует.");
+                        _logger.LogWarning($"Попытка обновления на уже существующий логин: {entity.Username}");
+                        throw new InvalidOperationException("Пользователь с таким логином уже существует.");
                     }
                     existingUser.Username = entity.Username;
                 }
@@ -121,8 +122,8 @@ namespace ServerLibrary.Services.Implementations
                 {
                     if (await _db.Users.AnyAsync(u => u.Email == entity.Email && u.Id != id))
                     {
-                        _logger.LogWarning("Попытка обновления на уже существующий Email: {Email}", entity.Email);
-                        throw new InvalidOperationException("Пользователь с таким Email уже существует.");
+                        _logger.LogWarning($"Попытка обновления на уже существующий Email: {entity.Email}");
+                        throw new InvalidOperationException("Пользователь с такой почтой уже существует.");
                     }
                     existingUser.Email = entity.Email;
                 }
@@ -131,7 +132,7 @@ namespace ServerLibrary.Services.Implementations
                 existingUser.LastName = entity.LastName ?? existingUser.LastName;
 
                 await _repository.UpdateAsync(existingUser);
-                _logger.LogInformation("Пользователь ID {Id} успешно обновлен", id);
+                _logger.LogInformation($"Пользователь ID {id} успешно обновлен");
 
                 return existingUser;
 

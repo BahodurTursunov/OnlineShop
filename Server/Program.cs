@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using ServerLibrary.Data;
-using ServerLibrary.DI;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services.Contracts;
+using ServerLibrary.Services.Contracts.Auth;
 using ServerLibrary.Services.Implementations;
+using ServerLibrary.Services.Implementations.Auth;
+using System.Text;
 
 namespace Server
 {
@@ -33,7 +36,7 @@ namespace Server
 
             builder.Services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             builder.Services.AddScoped<IUserService, UserService>();
-            //builder.Services.AddServices();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
@@ -49,7 +52,7 @@ namespace Server
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Введите токен JWT в формате: Bearer {token}"
+                    Description = "Просто вставьте токен сюда)"
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -69,7 +72,22 @@ namespace Server
 
             });
 
-            // Добавляем JWT-аутентификацию
+            builder.Services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = "OnlineStore",
+                        ValidAudience = "OnlineStoreUsers",
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("idfjrhcgquegh1c9p4rhqw08ex,fhamisudhfvauipsrghcairhfxajshdfjxhasdfh"))
+                    };
+                });
+
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
@@ -80,10 +98,11 @@ namespace Server
             }
             ;
             app.UseRouting();
-
-
             app.UseHttpsRedirection();
+
+            app.UseAuthentication(); // обязательно ДО UseAuthorization
             app.UseAuthorization();
+
             app.MapControllers();
             app.Run();
         }

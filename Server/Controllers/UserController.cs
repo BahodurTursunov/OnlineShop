@@ -1,10 +1,13 @@
 using BaseLibrary.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ServerLibrary.Exceptions;
 using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
@@ -17,7 +20,7 @@ namespace Server.Controllers
             _logger = logger;
         }
 
-        [HttpPost("Create user")]
+        [HttpPost("CreateUser")]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
             try
@@ -29,9 +32,19 @@ namespace Server.Controllers
                 }
 
                 var createdUser = await _userService.Create(user);
-                _logger.LogInformation("Пользователь {Username} успешно создан", createdUser.Username);
+                _logger.LogInformation($"Пользователь {createdUser.Username} успешно создан");
 
                 return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
+            }
+            catch (UsernameAlreadyExitstException)
+            {
+                return StatusCode(406, $"Пользователь с логином {user.Username} уже существует.");
+
+            }
+            catch (UserMailAlreadyExistException)
+            {
+                return StatusCode(406, $"Пользователь с почтой {user.Email} уже существует.");
+
             }
             catch (Exception ex)
             {
@@ -40,7 +53,7 @@ namespace Server.Controllers
             }
         }
 
-        [HttpGet("Get all users")]
+        [HttpGet("GetAllUsers")]
         public ActionResult<IEnumerable<User>> GetAllUsers()
         {
             try
@@ -57,7 +70,7 @@ namespace Server.Controllers
             }
         }
 
-        [HttpGet("Get by id")]
+        [HttpGet("GetById")]
         public async Task<IActionResult> GetUserById(int id)
         {
             try
@@ -65,7 +78,7 @@ namespace Server.Controllers
                 var user = await _userService.GetById(id);
                 if (user == null)
                 {
-                    _logger.LogWarning("Пользователь с ID {Id} не найден.", id);
+                    _logger.LogWarning($"Пользователь с ID {id} не найден.");
                     return NotFound();
                 }
 
@@ -73,13 +86,12 @@ namespace Server.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при получении пользователя с ID {Id}.", id);
+                _logger.LogError(ex, $"Ошибка при получении пользователя с ID {id}.");
                 return StatusCode(500, "Внутренняя ошибка сервера.");
             }
         }
 
-        // PUT: api/User/{id}
-        [HttpPut("Update user by {id}")]
+        [HttpPut("UpdateUserById")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
             try
@@ -93,10 +105,11 @@ namespace Server.Controllers
                 var updatedUser = await _userService.Update(id, user);
                 if (updatedUser == null)
                 {
-                    _logger.LogWarning("Пользователь с ID {Id} не найден.", id);
+                    _logger.LogWarning($"Пользователь с ID {id} не найден.");
                     return NotFound();
                 }
 
+                _logger.LogInformation($"Пользователь с ID {id} был обновлен");
                 return Ok(updatedUser);
             }
             catch (Exception ex)
@@ -107,7 +120,7 @@ namespace Server.Controllers
         }
 
         // DELETE: api/User/{id}
-        [HttpDelete("Delete user by {id}")]
+        [HttpDelete("DeleteUserById")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             try
@@ -115,15 +128,19 @@ namespace Server.Controllers
                 var result = await _userService.Delete(id);
                 if (result is null)
                 {
-                    _logger.LogWarning("Пользователь с ID {Id} не найден при попытке удаления.", id);
+                    _logger.LogWarning($"Пользователь с ID {id} не найден при попытке удаления.");
                     return NotFound();
                 }
 
-                return NoContent();
+                return Ok(new
+                {
+                    message = $"Пользователь {result.Username} удален",
+                    id = result.Id
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка при удалении пользователя с ID {Id}.", id);
+                _logger.LogError(ex, $"Ошибка при удалении пользователя с ID {id}.");
                 return StatusCode(500, "Внутренняя ошибка сервера.");
             }
         }
