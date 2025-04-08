@@ -18,6 +18,36 @@ namespace Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            #region JWT
+            var jwtSettings = builder.Configuration.GetSection("Jwt");
+            var secretKey = jwtSettings["SecretKey"];
+
+            builder.Services.AddAuthentication(options =>
+             {
+                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+             })
+             .AddJwtBearer(options =>
+             {
+                 options.TokenValidationParameters = new TokenValidationParameters
+                 {
+                     ValidateIssuer = true,
+                     ValidIssuer = jwtSettings["Issuer"],
+
+                     ValidateAudience = true,
+                     ValidAudience = jwtSettings["Audience"],
+
+                     ValidateLifetime = true,
+
+                     ValidateIssuerSigningKey = true,
+                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+
+                     ClockSkew = TimeSpan.Zero // без задержки на время
+                 };
+             });
+            #endregion
+
+            #region LOGGING
             Log.Logger = new LoggerConfiguration()
                .WriteTo.Console()
                .WriteTo.File("logs/info_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)
@@ -25,18 +55,23 @@ namespace Server
                .WriteTo.File("logs/warning_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning)
                .MinimumLevel.Debug()
                .CreateLogger();
+            #endregion
 
+            #region DB
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
                 .LogTo(Console.Write, LogLevel.Information)
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
+            #endregion
 
             builder.Services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             builder.Services.AddScoped<IUserService, UserService>();
             //builder.Services.AddServices();
 
+
+            builder.Services.AddAuthentication();
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
 
@@ -101,11 +136,10 @@ namespace Server
             ;
             app.UseRouting();
 
-            app.UseMiddleware<GlobalExceptionMiddleware>();
-            //app.UseMiddleware<UserameExitstExeptionMiddleware>();
 
-            app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
             app.Run();
         }
