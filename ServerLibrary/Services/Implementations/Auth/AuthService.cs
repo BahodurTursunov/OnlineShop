@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using ServerLibrary.Data;
+using ServerLibrary.Exceptions;
 using ServerLibrary.Services.Contracts.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -46,7 +47,7 @@ namespace ServerLibrary.Services.Implementations.Auth
             if (await _dbContext.Users.AnyAsync(u => u.Username == dto.Username || u.Email == dto.Email))
             {
                 _logger.LogWarning("Пользователь с таким логином или почтой уже существует");
-                throw new InvalidOperationException("Пользователь с таким логином или почтой уже существует");
+                throw new UsernameAlreadyExitstException();
             }
 
             var user = new User

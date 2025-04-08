@@ -24,12 +24,17 @@ namespace ServerLibrary.Services.Implementations
                     _logger.LogWarning("Ошибка валидации: Username и Email обязательны.");
                     throw new ArgumentException("Username и Email не могут быть пустыми.");
                 }
-
-                if (await _db.Users.AnyAsync(u => u.Username == entity.Username))
+                if (IsUsernameUnique(entity)) // TODO написать метод который будет проверять на уникальность логина
                 {
-                    _logger.LogWarning($"Пользователь с логином {entity.Username} уже существует.");
-                    throw new UsernameAlreadyExitstException($"Пользователь с логином {entity.Username} уже существует.");
+
                 }
+
+                /*
+                                if (await _db.Users.AnyAsync(u => u.Username == entity.Username))
+                                {
+                                    _logger.LogWarning($"Пользователь с логином {entity.Username} уже существует.");
+                                    throw new UsernameAlreadyExitstException($"Пользователь с логином {entity.Username} уже существует.");
+                                }*/
 
                 if (await _db.Users.AnyAsync(e => e.Email == entity.Email))
                 {
