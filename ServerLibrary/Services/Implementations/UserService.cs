@@ -1,5 +1,4 @@
 ﻿using BaseLibrary.Entities;
-using BaseLibrary.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
@@ -38,16 +37,12 @@ namespace ServerLibrary.Services.Implementations
                 throw new UserMailAlreadyExistException("Пользователь с таким Email уже существует.");
             }
 
-            // Хэширование пароля
             entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);
-
-            // Сохранение пользователя
             await _repository.CreateAsync(entity);
 
             _logger.LogInformation($"Пользователь {entity.Username} успешно добавлен в базу данных");
             return entity;
         }
-
 
         public async Task<User> Delete(int id)
         {
