@@ -24,17 +24,12 @@ namespace ServerLibrary.Services.Implementations
                     _logger.LogWarning("Ошибка валидации: Username и Email обязательны.");
                     throw new ArgumentException("Username и Email не могут быть пустыми.");
                 }
-                if (IsUsernameUnique(entity)) // TODO написать метод который будет проверять на уникальность логина
+
+                if (await _db.Users.AnyAsync(u => u.Username == entity.Username))
                 {
-
+                    _logger.LogWarning($"Пользователь с логином {entity.Username} уже существует.");
+                    throw new UsernameAlreadyExitstException($"Пользователь с логином {entity.Username} уже существует.");
                 }
-
-                /*
-                                if (await _db.Users.AnyAsync(u => u.Username == entity.Username))
-                                {
-                                    _logger.LogWarning($"Пользователь с логином {entity.Username} уже существует.");
-                                    throw new UsernameAlreadyExitstException($"Пользователь с логином {entity.Username} уже существует.");
-                                }*/
 
                 if (await _db.Users.AnyAsync(e => e.Email == entity.Email))
                 {
@@ -65,13 +60,13 @@ namespace ServerLibrary.Services.Implementations
                 if (user == null)
                 {
                     _logger.LogWarning($"Пользователь с ID {id} не найден");
-                    return null;
+                    throw new KeyNotFoundException($"Пользователь с ID {id} не найден");
                 }
 
                 await _repository.DeleteAsync(id);
                 _logger.LogInformation($"Пользователь ID {id} успешно удален");
 
-                return user;
+                return user!;
             }
             catch (Exception ex)
             {
@@ -94,9 +89,8 @@ namespace ServerLibrary.Services.Implementations
             if (user is null)
             {
                 _logger.LogWarning($"Пользователь с идентификатором {id} не найден в базе данных");
-                return null;
             }
-            return user;
+            return user!;
         }
 
         public async Task<User> Update(int id, User entity)
@@ -109,7 +103,7 @@ namespace ServerLibrary.Services.Implementations
                 if (existingUser is null)
                 {
                     _logger.LogWarning($"Пользователь с идентификатором {id} не найден в базе данных");
-                    return null;
+                    throw new KeyNotFoundException($"Пользователь с идентификатором {id} не найден в базе данных");
                 }
 
                 if (!string.IsNullOrWhiteSpace(entity.Username))

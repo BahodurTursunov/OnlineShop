@@ -44,7 +44,7 @@ namespace ServerLibrary.Repositories.Implementations
                 if (item is null)
                 {
                     _logger.LogWarning($"Объект {typeof(T).Name} с идентификатором {id} не найден в базе данных для удаления");
-                    return null;
+                    throw new KeyNotFoundException($"Объект {typeof(T).Name} с идентификатором {id} не найден в базе данных для удаления");
                 }
                 _db.Remove(item);
                 await _db.SaveChangesAsync();
@@ -68,7 +68,7 @@ namespace ServerLibrary.Repositories.Implementations
 
             var item = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == id);
             _logger.LogInformation($"Данные объекта {typeof(T).Name} с идентификатором {id} успешно прочитаны из базы данных");
-            return item;
+            return item!;
         }
 
         public async Task<T> UpdateAsync(T entity)

@@ -30,7 +30,16 @@ namespace ServerLibrary.Services.Implementations.Auth
         public async Task<string> LoginAsync(LoginUserDTO dto)
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
-            if (user == null || !Verify(dto.Password, user.PasswordHash))
+
+            if (user == null)
+            {
+                _logger.LogWarning($"Пользователь с логином {dto.Username} не найден.");
+                throw new UnauthorizedAccessException("Неверный логин или пароль");
+            }
+
+            bool isPasswordValid = Verify(dto.Password, user.PasswordHash);
+
+            if (!isPasswordValid)
             {
                 _logger.LogWarning("Неверный логин или пароль");
                 throw new UnauthorizedAccessException("Неверный логин или пароль");
@@ -104,7 +113,7 @@ namespace ServerLibrary.Services.Implementations.Auth
 
         public bool Verify(string password, string passwordHash)
         {
-            return BCrypt.Net.BCrypt.EnhancedVerify(password, passwordHash);
+            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
 
     }

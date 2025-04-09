@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace BaseLibrary.Entities
 {
@@ -22,14 +23,19 @@ namespace BaseLibrary.Entities
         [Column(TypeName = "numeric(18, 2)")]
         public decimal Discount { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [ForeignKey("Category")]
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
 
-        public ICollection<OrderItem> OrderItems { get; set; }
-        public ICollection<CartItem> CartItems { get; set; }
-        public ICollection<Review> Reviews { get; set; }
+        [JsonIgnore]
+        public Category? Category { get; set; }
+
+        [JsonIgnore]
+        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        [JsonIgnore]
+        public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+
+        [JsonIgnore]
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     }
 }

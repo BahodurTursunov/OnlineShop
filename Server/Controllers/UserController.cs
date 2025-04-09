@@ -7,7 +7,7 @@ using ServerLibrary.Services.Contracts;
 namespace Server.Controllers
 {
     [ApiController]
-    [Authorize]
+    //[Authorize]
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
@@ -20,6 +20,7 @@ namespace Server.Controllers
             _logger = logger;
         }
 
+        //[Authorize(Roles = "Admin")]
         [HttpPost("CreateUser")]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
@@ -91,6 +92,7 @@ namespace Server.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("UpdateUserById")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
@@ -119,7 +121,7 @@ namespace Server.Controllers
             }
         }
 
-        // DELETE: api/User/{id}
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteUserById")]
         public async Task<IActionResult> DeleteUser(int id)
         {

@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Serilog.Events;
+using Server.Authorization;
 using ServerLibrary.Data;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
@@ -19,14 +21,20 @@ namespace Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            #region Logging
             Log.Logger = new LoggerConfiguration()
-               .WriteTo.Console()
-               .WriteTo.File("logs/info_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)
-               .WriteTo.File("logs/error_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Error)
-               .WriteTo.File("logs/warning_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning)
-               .MinimumLevel.Debug()
-               .CreateLogger();
+                .MinimumLevel.Debug() // сначала уровень
+                .WriteTo.Console()
+                .WriteTo.File("logs/info_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information)
+                .WriteTo.File("logs/warning_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
+                .WriteTo.File("logs/error_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Error)
+                .CreateLogger();
 
+            builder.Host.UseSerilog();
+
+            #endregion
+
+            #region DB Connect
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
@@ -34,13 +42,20 @@ namespace Server
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
 
+            #endregion
+
+            #region Registration Services
             builder.Services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            #endregion
 
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
 
+            #region SwaggerGen
             builder.Services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "Online Shop API", Version = "v1" });
@@ -71,7 +86,11 @@ namespace Server
                 });
 
             });
+            #endregion
 
+            builder.Services.AddMyAuth();
+
+            builder.Services.AddAuthorization();
             builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
@@ -87,7 +106,6 @@ namespace Server
                     };
                 });
 
-            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
