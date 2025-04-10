@@ -67,6 +67,12 @@ namespace ServerLibrary.Repositories.Implementations
             _logger.LogInformation($"Попытка получения объекта {typeof(T).Name} с идентификатором {id} из базы данных");
 
             var item = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == id);
+            if (item is null)
+            {
+                _logger.LogWarning($"Объект {typeof(T).Name} с идентификатором {id} не найден в базе данных");
+                //throw new KeyNotFoundException($"Объект {typeof(T).Name} с идентификатором {id} не найден в базе данных");
+                return null;
+            }
             _logger.LogInformation($"Данные объекта {typeof(T).Name} с идентификатором {id} успешно прочитаны из базы данных");
             return item!;
         }

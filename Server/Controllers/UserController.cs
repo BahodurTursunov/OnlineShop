@@ -8,7 +8,7 @@ namespace Server.Controllers
 {
     [ApiController]
     //[Authorize]
-    [Route("[controller]")]
+    [Route("user")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -21,7 +21,7 @@ namespace Server.Controllers
         }
 
         //[Authorize(Roles = "Admin")]
-        [HttpPost("CreateUser")]
+        [HttpPost("user")]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
             try
@@ -54,7 +54,7 @@ namespace Server.Controllers
             }
         }
 
-        [HttpGet("GetAllUsers")]
+        [HttpGet("users")]
         public ActionResult<IEnumerable<User>> GetAllUsers()
         {
             try
@@ -71,7 +71,7 @@ namespace Server.Controllers
             }
         }
 
-        [HttpGet("GetById")]
+        [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
             try
@@ -92,8 +92,8 @@ namespace Server.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpPut("UpdateUserById")]
+        [Authorize/*(Roles = "Admin")*/]
+        [HttpPut("users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
             try
@@ -121,8 +121,8 @@ namespace Server.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("DeleteUserById")]
+        [Authorize/*(Roles = "Admin")*/]
+        [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             try
@@ -139,6 +139,11 @@ namespace Server.Controllers
                     message = $"Пользователь {result.Username} удален",
                     id = result.Id
                 });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogError(ex, "Пользователь с таким идентификатором не найден");
+                return StatusCode(404, ex.Message);
             }
             catch (Exception ex)
             {

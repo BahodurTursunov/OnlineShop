@@ -5,6 +5,7 @@ using Serilog;
 using Serilog.Events;
 using Server.Authorization;
 using ServerLibrary.Data;
+using ServerLibrary.Middleware;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services.Contracts;
@@ -108,7 +109,7 @@ namespace Server
 
 
             var app = builder.Build();
-
+            app.UseMiddleware<ExceptionMiddleware>();
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

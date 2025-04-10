@@ -66,7 +66,7 @@ namespace ServerLibrary.Services.Implementations
                 await _repository.DeleteAsync(id);
                 _logger.LogInformation($"Пользователь ID {id} успешно удален");
 
-                return user!;
+                return user;
             }
             catch (Exception ex)
             {
