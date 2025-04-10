@@ -1,7 +1,6 @@
 using BaseLibrary.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ServerLibrary.Exceptions;
 using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
@@ -24,132 +23,77 @@ namespace Server.Controllers
         [HttpPost("user")]
         public async Task<IActionResult> CreateUser([FromBody] User user)
         {
-            try
-            {
-                if (user == null)
-                {
-                    _logger.LogWarning("Попытка создать пользователя с пустым телом запроса.");
-                    return BadRequest("Пользователь не может быть пустым.");
-                }
 
-                var createdUser = await _userService.Create(user);
-                _logger.LogInformation($"Пользователь {createdUser.Username} успешно создан");
-
-                return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
-            }
-            catch (UsernameAlreadyExitstException)
+            if (user == null)
             {
-                return StatusCode(406, $"Пользователь с логином {user.Username} уже существует.");
+                _logger.LogWarning("Попытка создать пользователя с пустым телом запроса.");
+                return BadRequest("Пользователь не может быть пустым.");
+            }
 
-            }
-            catch (UserMailAlreadyExistException)
-            {
-                return StatusCode(406, $"Пользователь с почтой {user.Email} уже существует.");
+            var createdUser = await _userService.Create(user);
+            _logger.LogInformation($"Пользователь {createdUser.Username} успешно создан");
 
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при создании пользователя.");
-                return StatusCode(500, "Не корректно введенные данные, либо человек с такой почтой уже зарегистрирован");
-            }
+            return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
         }
 
         [HttpGet("users")]
         public ActionResult<IEnumerable<User>> GetAllUsers()
         {
-            try
-            {
-                var users = _userService.GetAll();
-                _logger.LogInformation("Запрос на получение всех пользователей.");
+            var users = _userService.GetAll();
+            _logger.LogInformation("Запрос на получение всех пользователей.");
 
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при получении пользователей.");
-                return StatusCode(500, "Внутренняя ошибка сервера.");
-            }
+            return Ok(users);
         }
 
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
-            try
+            var user = await _userService.GetById(id);
+            if (user == null)
             {
-                var user = await _userService.GetById(id);
-                if (user == null)
-                {
-                    _logger.LogWarning($"Пользователь с ID {id} не найден.");
-                    return NotFound();
-                }
-
-                return Ok(user);
+                _logger.LogWarning($"Пользователь с ID {id} не найден.");
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Ошибка при получении пользователя с ID {id}.");
-                return StatusCode(500, "Внутренняя ошибка сервера.");
-            }
+            return Ok(user);
         }
 
         [Authorize/*(Roles = "Admin")*/]
         [HttpPut("users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
-            try
+            if (user == null)
             {
-                if (user == null)
-                {
-                    _logger.LogWarning("Попытка обновить пользователя с пустым телом запроса.");
-                    return BadRequest("Пользователь не может быть пустым.");
-                }
-
-                var updatedUser = await _userService.Update(id, user);
-                if (updatedUser == null)
-                {
-                    _logger.LogWarning($"Пользователь с ID {id} не найден.");
-                    return NotFound();
-                }
-
-                _logger.LogInformation($"Пользователь с ID {id} был обновлен");
-                return Ok(updatedUser);
+                _logger.LogWarning("Попытка обновить пользователя с пустым телом запроса.");
+                return BadRequest("Пользователь не может быть пустым.");
             }
-            catch (Exception ex)
+
+            var updatedUser = await _userService.Update(id, user);
+            if (updatedUser == null)
             {
-                _logger.LogError(ex, "Ошибка при обновлении пользователя с ID {Id}.", id);
-                return StatusCode(500, "Внутренняя ошибка сервера.");
+                _logger.LogWarning($"Пользователь с ID {id} не найден.");
+                return NotFound();
             }
+
+            _logger.LogInformation($"Пользователь с ID {id} был обновлен");
+            return Ok(updatedUser);
         }
 
         [Authorize/*(Roles = "Admin")*/]
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            try
+            var result = await _userService.Delete(id);
+            if (result is null)
             {
-                var result = await _userService.Delete(id);
-                if (result is null)
-                {
-                    _logger.LogWarning($"Пользователь с ID {id} не найден при попытке удаления.");
-                    return NotFound();
-                }
+                _logger.LogWarning($"Пользователь с ID {id} не найден при попытке удаления.");
+                return NotFound();
+            }
 
-                return Ok(new
-                {
-                    message = $"Пользователь {result.Username} удален",
-                    id = result.Id
-                });
-            }
-            catch (KeyNotFoundException ex)
+            return Ok(new
             {
-                _logger.LogError(ex, "Пользователь с таким идентификатором не найден");
-                return StatusCode(404, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Ошибка при удалении пользователя с ID {id}.");
-                return StatusCode(500, "Внутренняя ошибка сервера.");
-            }
+                message = $"Пользователь {result.Username} удален",
+                id = result.Id
+            });
         }
     }
 }

@@ -41,14 +41,14 @@ namespace ServerLibrary.Middleware
             {
                 _logger.LogError(ex, ex.Message);
                 context.Response.StatusCode = (int)HttpStatusCode.Conflict; // 409
-                var response = new { message = ex.Message };
+                var response = new { message = "Username is already exist" };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
             catch (UserMailAlreadyExistException ex)
             {
                 _logger.LogError(ex, ex.Message);
                 context.Response.StatusCode = (int)HttpStatusCode.Conflict; // 409
-                var response = new { message = ex.Message };
+                var response = new { message = "Email already exist" };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
             catch (Exception ex)
