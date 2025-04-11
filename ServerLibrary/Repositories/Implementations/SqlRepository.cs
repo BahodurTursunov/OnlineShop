@@ -11,84 +11,82 @@ namespace ServerLibrary.Repositories.Implementations
         private readonly ApplicationDbContext _db = db;
         private readonly ILogger<SqlRepository<T>> _logger = logger;
 
-        public async Task<T> CreateAsync(T entity)
+        public async Task<T?> CreateAsync(T entity)
         {
+            if (entity == null)
+            {
+                _logger.LogWarning("Попытка добавить пустой объект в базу данных");
+                return null;
+            }
+
             try
             {
-                if (entity == null)
-                {
-                    _logger.LogWarning("Попытка добавить пустой объект в базу данных");
-                    throw new ArgumentNullException(nameof(entity), "Объект не может быть пустым");
-                }
                 await _db.AddAsync(entity);
                 await _db.SaveChangesAsync();
-
                 _logger.LogInformation($"Объект {entity.GetType().Name} успешно добавлен в базу данных");
                 return entity;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Ошибка при добавлении объекта {entity.GetType().Name} в базу данных");
-                throw;
+                _logger.LogError(ex, $"Ошибка при добавлении объекта {entity?.GetType().Name} в базу данных");
+                return null;
             }
         }
 
-        public async Task<T> DeleteAsync(int id)
+        public async Task<T?> DeleteAsync(int id)
         {
-            try
-            {
-                _logger.LogInformation($"Попытка удаления объекта {typeof(T).Name} с идентификатором {id} из базы данных");
-
-                var item = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == id);
-
-                if (item is null)
-                {
-                    _logger.LogWarning($"Объект {typeof(T).Name} с идентификатором {id} не найден в базе данных для удаления");
-                    return null;
-                }
-                _db.Remove(item);
-                await _db.SaveChangesAsync();
-                return item;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Ошибка при удалении объекта {typeof(T).Name} из базы данных");
-                throw;
-            }
-        }
-
-        public IQueryable<T> GetAll()
-        {
-            return _db.Set<T>();
-        }
-
-        public async Task<T> GetById(int id)
-        {
-            _logger.LogInformation($"Попытка получения объекта {typeof(T).Name} с идентификатором {id} из базы данных");
+            _logger.LogInformation($"Попытка удаления объекта {typeof(T).Name} с ID {id}");
 
             var item = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == id);
-            _logger.LogInformation($"Данные объекта {typeof(T).Name} с идентификатором {id} успешно прочитаны из базы данных");
+            if (item == null)
+            {
+                _logger.LogWarning($"Объект {typeof(T).Name} с ID {id} не найден для удаления");
+                return null;
+            }
+
+            _db.Remove(item);
+            await _db.SaveChangesAsync();
+            _logger.LogInformation($"Объект {typeof(T).Name} с ID {id} успешно удалён");
+            return item;
+
+        }
+
+        public IQueryable<T> GetAll() => _db.Set<T>();
+
+        public async Task<T?> GetById(int id)
+        {
+            _logger.LogInformation($"Чтение объекта {typeof(T).Name} с ID {id}");
+
+            var item = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == id);
+            if (item == null)
+            {
+                _logger.LogWarning($"Объект {typeof(T).Name} с ID {id} не найден");
+            }
+
             return item;
         }
 
-        public async Task<T> UpdateAsync(T entity)
+        public async Task<T?> UpdateAsync(T entity)
         {
-            try
+            if (entity == null)
             {
-                _logger.LogInformation($"Попытка обновления объекта {entity.GetType().Name} в базе данных");
-                var existingItem = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == entity.Id);
-                if (existingItem != null)
-                {
-                    _db.Update(entity);
-                    _db.SaveChanges();
-                    _logger.LogInformation($"Объект {entity.GetType().Name} успешно обновлен в базе данных");
-                }
+                _logger.LogWarning("Попытка обновить пустой объект");
+                return null;
             }
-            catch (Exception ex)
+
+            var existingItem = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == entity.Id);
+
+            if (existingItem != null)
             {
-                _logger.LogError(ex, $"Ошибка при обновлении объекта {entity.GetType().Name} в базе данных");
-                throw;
+                _db.Update(entity);
+                _db.SaveChanges();
+                _logger.LogInformation($"Объект {entity.GetType().Name} успешно обновлен в базе данных");
             }
+            else
+            {
+                return null;
+            }
+
             return entity;
         }
     }

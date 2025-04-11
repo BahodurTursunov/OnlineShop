@@ -108,8 +108,12 @@ namespace ServerLibrary.Data
                 .HasColumnType("numeric(18,2)");
 
             modelBuilder.Entity<Product>()
-            .Property(o => o.Price)
-            .HasColumnType("numeric(18,2)");
+                .Property(o => o.Price)
+                .HasColumnType("numeric(18,2)");
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd();  // Убедись, что для Id включена генерация значений
 
 
             // 1-N: Category -> ChildCategory

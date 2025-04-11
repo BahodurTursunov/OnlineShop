@@ -2,7 +2,9 @@
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services.Contracts;
+using ServerLibrary.Services.Contracts.Auth;
 using ServerLibrary.Services.Implementations;
+using ServerLibrary.Services.Implementations.Auth;
 
 namespace ServerLibrary.DI
 {
@@ -12,6 +14,7 @@ namespace ServerLibrary.DI
         {
             services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAuthService, AuthService>();
 
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace BaseLibrary.Entities
 {
@@ -7,9 +8,10 @@ namespace BaseLibrary.Entities
         [Required(ErrorMessage = "Название категории обязательно к заполнению")]
         [MaxLength(100, ErrorMessage = "Название не должно превышать 100 ")]
         public string Name { get; set; } = "";
-        public int ChildCategoryId { get; set; }
+        //public int ChildCategoryId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        [JsonIgnore]
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }
