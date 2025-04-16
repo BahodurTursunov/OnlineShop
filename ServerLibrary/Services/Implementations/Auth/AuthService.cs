@@ -1,7 +1,6 @@
 ﻿using BaseLibrary.DTOs;
 using BaseLibrary.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using ServerLibrary.Data;
@@ -12,21 +11,19 @@ namespace ServerLibrary.Services.Implementations.Auth
 {
     public class AuthService : IAuthService
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IJwtService _jwtService;
 
 
-        public AuthService(IConfiguration configuration, ILogger<AuthService> logger, ApplicationDbContext dbContext, IJwtService jwtService)
+        public AuthService(ILogger<AuthService> logger, ApplicationDbContext dbContext, IJwtService jwtService)
         {
-            _configuration = configuration;
             _logger = logger;
             _dbContext = dbContext;
             _jwtService = jwtService;
         }
 
-        public async Task<string> LoginAsync(LoginUserDTO dto, CancellationToken cancellationToken)
+        public async Task<AuthResponseDTO> LoginAsync(LoginUserDTO dto, CancellationToken cancellationToken)
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == dto.Username, cancellationToken);
 
@@ -36,7 +33,7 @@ namespace ServerLibrary.Services.Implementations.Auth
                 throw new UnauthorizedAccessException("Неверный логин или пароль");
             }
 
-            bool isPasswordValid = Verify(dto.Password, user.PasswordHash, cancellationToken);
+            bool isPasswordValid = Verify(dto.Password, user.PasswordHash);
 
             if (!isPasswordValid)
             {
@@ -44,7 +41,7 @@ namespace ServerLibrary.Services.Implementations.Auth
                 throw new UnauthorizedAccessException("Неверный логин или пароль");
             }
 
-            var token = _jwtService.GenerateTokenAsync(user, cancellationToken);
+            var token = await _jwtService.GenerateTokenAsync(user, cancellationToken);
             _logger.LogInformation($"Пользователь {user.Username} успешно вошел в систему");
 
             return token;
@@ -64,7 +61,7 @@ namespace ServerLibrary.Services.Implementations.Auth
                 Email = dto.Email,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                PasswordHash = Generate(dto.Password, cancellationToken),
+                PasswordHash = Generate(dto.Password),
                 RoleId = 0,
                 CreatedAt = DateTime.UtcNow
             };
@@ -105,12 +102,12 @@ namespace ServerLibrary.Services.Implementations.Auth
         }
 */
 
-        public string Generate(string password, CancellationToken cancellationToken)
+        public string Generate(string password)
         {
             return BCrypt.Net.BCrypt.EnhancedHashPassword(password);
         }
 
-        public bool Verify(string password, string passwordHash, CancellationToken cancellationToken)
+        public bool Verify(string password, string passwordHash)
         {
             return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
