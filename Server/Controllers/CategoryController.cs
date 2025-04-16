@@ -19,8 +19,8 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "1")]
-        [HttpPost("CreateCategory")]
-        public async Task<IActionResult> CreateCategory([FromBody] Category category)
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateCategory([FromBody] Category category, CancellationToken cancellationToken)
         {
             try
             {
@@ -30,7 +30,7 @@ namespace Server.Controllers
                     return BadRequest("Название категории не может быть пустым.");
                 }
 
-                var createdCategory = await _categoryService.Create(category);
+                var createdCategory = await _categoryService.Create(category, cancellationToken);
                 _logger.LogInformation($"Категория '{createdCategory.Name}' успешно создана.");
 
                 return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.Id }, createdCategory);
@@ -42,12 +42,12 @@ namespace Server.Controllers
             }
         }
 
-        [HttpGet("GetAllCategories")]
-        public IActionResult GetAllCategories()
+        [HttpGet("allCategories")]
+        public IActionResult GetAllCategories(CancellationToken cancellationToken)
         {
             try
             {
-                var categories = _categoryService.GetAll();
+                var categories = _categoryService.GetAll(cancellationToken);
                 _logger.LogInformation("Запрос на получение всех категорий.");
                 return Ok(categories);
             }
@@ -58,12 +58,12 @@ namespace Server.Controllers
             }
         }
 
-        [HttpGet("GetById")]
-        public async Task<IActionResult> GetCategoryById(int id)
+        [HttpGet("getById")]
+        public async Task<IActionResult> GetCategoryById(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var category = await _categoryService.GetById(id);
+                var category = await _categoryService.GetById(id, cancellationToken);
                 if (category == null)
                 {
                     _logger.LogWarning($"Категория с ID {id} не найдена.");
@@ -80,8 +80,8 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("UpdateCategoryById")]
-        public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category category)
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category category, CancellationToken cancellationToken)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace Server.Controllers
                     return BadRequest("Категория не может быть пустой.");
                 }
 
-                var updatedCategory = await _categoryService.Update(id, category);
+                var updatedCategory = await _categoryService.Update(id, category, cancellationToken);
                 if (updatedCategory == null)
                 {
                     _logger.LogWarning($"Категория с ID {id} не найдена.");
@@ -110,12 +110,12 @@ namespace Server.Controllers
 
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("DeleteCategoryById")]
-        public async Task<IActionResult> DeleteCategory(int id)
+        [HttpDelete("delete")]
+        public async Task<IActionResult> DeleteCategory(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var deletedCategory = await _categoryService.Delete(id);
+                var deletedCategory = await _categoryService.Delete(id, cancellationToken);
                 if (deletedCategory == null)
                 {
                     _logger.LogWarning($"Категория с ID {id} не найдена при попытке удаления.");

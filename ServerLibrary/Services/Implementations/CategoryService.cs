@@ -23,10 +23,10 @@ namespace ServerLibrary.Services.Implementations
             _db = db;
         }
 
-        public async Task<Category> Create(Category entity)
+        public async Task<Category> Create(Category entity, CancellationToken cancellationToken)
         {
             var existing = await _db.Categories
-                .FirstOrDefaultAsync(c => c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefaultAsync(c => c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase), cancellationToken);
 
             if (existing != null)
             {
@@ -34,18 +34,18 @@ namespace ServerLibrary.Services.Implementations
                 throw new InvalidOperationException($"Категория с именем {entity.Name} уже существует.");
             }
 
-            await _db.Categories.AddAsync(entity);
-            await _db.SaveChangesAsync();
+            await _db.Categories.AddAsync(entity, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation($"Категория {entity.Name} успешно создана.");
             return entity;
         }
 
-        public async Task<Category> Delete(int id)
+        public async Task<Category> Delete(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Удаление категории с ID {id}");
 
-            var category = await _db.Categories.FindAsync(id);
+            var category = await _db.Categories.FindAsync(id, cancellationToken);
             if (category == null)
             {
                 _logger.LogWarning($"Категория с ID {id} не найдена.");
@@ -53,22 +53,21 @@ namespace ServerLibrary.Services.Implementations
             }
 
             _db.Categories.Remove(category);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation($"Категория с ID {id} успешно удалена.");
             return category;
         }
 
-        public IQueryable<Category> GetAll()
+        public IQueryable<Category> GetAll(CancellationToken cancellationToken)
         {
-            return _repository.GetAll();
+            return _repository.GetAll(cancellationToken);
         }
 
-        public async Task<Category> GetById(int id)
+        public async Task<Category> GetById(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Поиск категории с ID {id}");
-            var category = await _repository.GetById(id);
-
+            var category = await _repository.GetById(id, cancellationToken);
             if (category == null)
             {
                 _logger.LogWarning($"Категория с ID {id} не найдена.");
@@ -78,7 +77,7 @@ namespace ServerLibrary.Services.Implementations
             return category;
         }
 
-        public async Task<Category> Update(int id, Category entity)
+        public async Task<Category> Update(int id, Category entity, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Попытка обновления категории с ID {id}");
 
@@ -90,7 +89,7 @@ namespace ServerLibrary.Services.Implementations
             }
 
             _db.Entry(existing).CurrentValues.SetValues(entity);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation($"Категория с ID {id} успешно обновлена.");
             return existing;

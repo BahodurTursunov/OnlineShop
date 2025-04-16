@@ -7,7 +7,7 @@ namespace Server.Controllers
 {
     [ApiController]
     //[Authorize]
-    [Route("user")]
+    //[Route("user")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -20,8 +20,8 @@ namespace Server.Controllers
         }
 
         //[Authorize(Roles = "Admin")]
-        [HttpPost("user")]
-        public async Task<IActionResult> CreateUser([FromBody] User user)
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
         {
 
             if (user == null)
@@ -30,25 +30,25 @@ namespace Server.Controllers
                 return BadRequest("Пользователь не может быть пустым.");
             }
 
-            var createdUser = await _userService.Create(user);
+            var createdUser = await _userService.Create(user, cancellationToken);
             _logger.LogInformation($"Пользователь {createdUser.Username} успешно создан");
 
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
         }
 
-        [HttpGet("users")]
-        public ActionResult<IEnumerable<User>> GetAllUsers()
+        [HttpGet("getAll")]
+        public ActionResult<IEnumerable<User>> GetAllUsers(CancellationToken cancellationToken)
         {
-            var users = _userService.GetAll();
+            var users = _userService.GetAll(cancellationToken);
             _logger.LogInformation("Запрос на получение всех пользователей.");
 
             return Ok(users);
         }
 
-        [HttpGet("users/{id}")]
-        public async Task<IActionResult> GetUserById(int id)
+        [HttpGet("getById")]
+        public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
-            var user = await _userService.GetById(id);
+            var user = await _userService.GetById(id, cancellationToken);
             if (user == null)
             {
                 _logger.LogWarning($"Пользователь с ID {id} не найден.");
@@ -58,8 +58,8 @@ namespace Server.Controllers
         }
 
         [Authorize/*(Roles = "Admin")*/]
-        [HttpPut("users/{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -67,7 +67,7 @@ namespace Server.Controllers
                 return BadRequest("Пользователь не может быть пустым.");
             }
 
-            var updatedUser = await _userService.Update(id, user);
+            var updatedUser = await _userService.Update(id, user, cancellationToken);
             if (updatedUser == null)
             {
                 _logger.LogWarning($"Пользователь с ID {id} не найден.");
@@ -79,10 +79,10 @@ namespace Server.Controllers
         }
 
         [Authorize/*(Roles = "Admin")*/]
-        [HttpDelete("users/{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        [HttpDelete("delete")]
+        public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
-            var result = await _userService.Delete(id);
+            var result = await _userService.Delete(id, cancellationToken);
             if (result is null)
             {
                 _logger.LogWarning($"Пользователь с ID {id} не найден при попытке удаления.");

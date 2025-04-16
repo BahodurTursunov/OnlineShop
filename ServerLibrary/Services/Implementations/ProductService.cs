@@ -19,9 +19,9 @@ namespace ServerLibrary.Services.Implementations
             _repository = repository;
             _logger = logger;
         }
-        public async Task<Product> Create(Product entity)
+        public async Task<Product> Create(Product entity, CancellationToken cancellationToken)
         {
-            var product = await _repository.CreateAsync(entity);
+            var product = await _repository.CreateAsync(entity, cancellationToken);
             if (product == null)
             {
                 _logger.LogError($"Ошибка при добавлении продукта {entity.Name} в базу данных");
@@ -35,21 +35,21 @@ namespace ServerLibrary.Services.Implementations
             return entity;
         }
 
-        public Task<Product> Delete(int id)
+        public Task<Product> Delete(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Продукт с ID {id} удаляется из базы данных");
-            return _repository.DeleteAsync(id);
+            return _repository.DeleteAsync(id, cancellationToken);
         }
 
-        public IQueryable<Product> GetAll()
+        public IQueryable<Product> GetAll(CancellationToken cancellationToken)
         {
-            return _repository.GetAll();
+            return _repository.GetAll(cancellationToken);
         }
 
-        public async Task<Product> GetById(int id)
+        public async Task<Product> GetById(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Попытка получения товара с идентификатором {id} из базы данных");
-            var product = await _repository.GetById(id);
+            var product = await _repository.GetById(id, cancellationToken);
 
             if (product is null)
             {
@@ -59,14 +59,14 @@ namespace ServerLibrary.Services.Implementations
             return product;
         }
 
-        public async Task<Product> GetByName(string name)
+        public async Task<Product> GetByName(string name, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new ArgumentNullException("Имя товара не может быть пустым");
             }
 
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase), cancellationToken);
 
             if (product == null)
             {
@@ -75,13 +75,13 @@ namespace ServerLibrary.Services.Implementations
             return product;
         }
 
-        public async Task<Product> Update(int id, Product entity)
+        public async Task<Product> Update(int id, Product entity, CancellationToken cancellationToken)
         {
             try
             {
                 _logger.LogInformation($"Попытка обновления продукта {id}");
 
-                var existingProduct = _repository.GetById(id);
+                var existingProduct = _repository.GetById(id, cancellationToken);
 
                 if (existingProduct is null)
                 {
@@ -90,7 +90,7 @@ namespace ServerLibrary.Services.Implementations
                 }
                 /*_db.Entry(existingProduct).CurrentValues.SetValues(entity);*/
 
-                return await _repository.UpdateAsync(entity);
+                return await _repository.UpdateAsync(entity, cancellationToken);
             }
             catch (Exception)
             {

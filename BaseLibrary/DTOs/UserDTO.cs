@@ -14,6 +14,7 @@ namespace BaseLibrary.DTOs
         [StringLength(30, ErrorMessage = "Имя пользователя не должно превышать 30 символов")]
         public string Username { get; set; } = "";
 
+
         [Required(ErrorMessage = "Email обязателен к заполнению")]
         [EmailAddress(ErrorMessage = "Неверный формат Email")]
         public string Email { get; set; } = "";

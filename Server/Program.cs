@@ -5,6 +5,7 @@ using Serilog;
 using Serilog.Events;
 using Server.Authorization;
 using ServerLibrary.Data;
+using ServerLibrary.Helpers;
 using ServerLibrary.Middleware;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
@@ -21,6 +22,12 @@ namespace Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            #region JWT
+            builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+            var jwtSection = builder.Configuration.GetSection("JwtSettings");
+            var jwtSettings = jwtSection.Get<JwtSettings>();
+            #endregion
 
             #region Logging
             Log.Logger = new LoggerConfiguration()
@@ -51,6 +58,7 @@ namespace Server
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IJwtService, JwtService>();
             #endregion
 
             builder.Services.AddControllers();
@@ -101,9 +109,10 @@ namespace Server
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = "OnlineStore",
-                        ValidAudience = "OnlineStoreUsers",
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("idfjrhcgquegh1c9p4rhqw08ex,fhamisudhfvauipsrghcairhfxajshdfjxhasdfh"))
+                        ValidIssuer = jwtSettings!.Issuer,
+                        ValidAudience = jwtSettings.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                        ClockSkew = TimeSpan.Zero // убираем задержку в 5 минут
                     };
                 });
 

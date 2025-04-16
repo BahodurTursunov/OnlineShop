@@ -18,6 +18,7 @@ namespace ServerLibrary.Data
         public DbSet<Review> Rewiews { get; set; }
         public DbSet<Payment> Payments { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

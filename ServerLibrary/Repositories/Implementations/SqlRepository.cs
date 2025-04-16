@@ -11,7 +11,7 @@ namespace ServerLibrary.Repositories.Implementations
         private readonly ApplicationDbContext _db = db;
         private readonly ILogger<SqlRepository<T>> _logger = logger;
 
-        public async Task<T?> CreateAsync(T entity)
+        public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken)
         {
             if (entity == null)
             {
@@ -21,8 +21,8 @@ namespace ServerLibrary.Repositories.Implementations
 
             try
             {
-                await _db.AddAsync(entity);
-                await _db.SaveChangesAsync();
+                await _db.AddAsync(entity, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation($"Объект {entity.GetType().Name} успешно добавлен в базу данных");
                 return entity;
             }
@@ -33,7 +33,7 @@ namespace ServerLibrary.Repositories.Implementations
             }
         }
 
-        public async Task<T?> DeleteAsync(int id)
+        public async Task<T> DeleteAsync(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Попытка удаления объекта {typeof(T).Name} с ID {id}");
 
@@ -45,19 +45,19 @@ namespace ServerLibrary.Repositories.Implementations
             }
 
             _db.Remove(item);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
             _logger.LogInformation($"Объект {typeof(T).Name} с ID {id} успешно удалён");
             return item;
 
         }
 
-        public IQueryable<T> GetAll() => _db.Set<T>();
+        public IQueryable<T> GetAll(CancellationToken cancellationToken) => _db.Set<T>();
 
-        public async Task<T?> GetById(int id)
+        public async Task<T> GetById(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Чтение объекта {typeof(T).Name} с ID {id}");
 
-            var item = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == id);
+            var item = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
             if (item == null)
             {
                 _logger.LogWarning($"Объект {typeof(T).Name} с ID {id} не найден");
@@ -66,7 +66,7 @@ namespace ServerLibrary.Repositories.Implementations
             return item;
         }
 
-        public async Task<T?> UpdateAsync(T entity)
+        public async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken)
         {
             if (entity == null)
             {
@@ -74,12 +74,12 @@ namespace ServerLibrary.Repositories.Implementations
                 return null;
             }
 
-            var existingItem = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == entity.Id);
+            var existingItem = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == entity.Id, cancellationToken);
 
             if (existingItem != null)
             {
                 _db.Update(entity);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation($"Объект {entity.GetType().Name} успешно обновлен в базе данных");
             }
             else
