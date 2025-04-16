@@ -36,7 +36,7 @@ namespace ServerLibrary.Services.Implementations
             }
 
             entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);
-            await _repository.CreateAsync(entity);
+            await _repository.CreateAsync(entity, cancellationToken);
 
             _logger.LogInformation($"Пользователь {entity.Username} успешно добавлен в базу данных");
             return entity;
