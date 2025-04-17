@@ -1,12 +1,11 @@
 ﻿using BaseLibrary.DTOs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.Services.Contracts.Auth;
 
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -37,13 +36,13 @@ namespace Server.Controllers
             return Ok(response);
         }
 
-        [Authorize]
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetProfile([FromBody] string id, CancellationToken cancellationToken)
-        {
-            var userId = int.Parse(User.FindFirst(id)?.Value ?? throw new UnauthorizedAccessException());
-            var profile = await _authService.GetUserProfileAsync(userId, cancellationToken);
-            return Ok(profile);
-        }
+        /* [Authorize]
+         [HttpGet("profile")]
+         public async Task<IActionResult> GetProfile([FromBody] string id, CancellationToken cancellationToken)
+         {
+             var userId = int.Parse(User.FindFirst(id)?.Value ?? throw new UnauthorizedAccessException());
+             var profile = await _authService.GetUserProfileAsync(userId, cancellationToken);
+             return Ok(profile);
+         }*/
     }
 }

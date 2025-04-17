@@ -140,7 +140,7 @@ namespace ServerLibrary.Data
                     Username = "bakha",
                     Email = "tursunovb18@gmail.com",
                     PasswordHash = "q1w2e3123", // TODO: заменить на хэшированный пароль
-                    RoleId = 1,
+                    Role = "Admin",
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 },
                 new User
@@ -151,7 +151,7 @@ namespace ServerLibrary.Data
                     Username = "vanya01",
                     Email = "ivan.petrov@example.com",
                     PasswordHash = "q1w2e3321",
-                    RoleId = 0,
+                    Role = "User",
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
             );

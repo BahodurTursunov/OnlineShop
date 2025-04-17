@@ -1,3 +1,4 @@
+#region Usages
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -14,6 +15,8 @@ using ServerLibrary.Services.Contracts.Auth;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Implementations.Auth;
 using System.Text;
+#endregion
+
 
 namespace Server
 {
@@ -97,7 +100,8 @@ namespace Server
             });
             #endregion
 
-            builder.Services.AddMyAuth();
+            //builder.Services.AddMyAuth();
+            builder.Services.AddMyClaims();
 
             builder.Services.AddAuthorization();
             builder.Services.AddAuthentication("Bearer")
@@ -118,7 +122,9 @@ namespace Server
 
 
             var app = builder.Build();
+
             app.UseMiddleware<ExceptionMiddleware>();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

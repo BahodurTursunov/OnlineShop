@@ -22,7 +22,7 @@ namespace BaseLibrary.Entities
         [Required(ErrorMessage = "Пароль обязателен к заполнению")]
         [MinLength(6, ErrorMessage = "Пароль должен быть не менее 6 символов")]
         public string PasswordHash { get; set; } = "";
-        public int RoleId { get; set; } = 0;
+        public string Role { get; set; } = "User";
         public string AccessToken { get; set; } = "";
         public string RefreshToken { get; set; } = "";
         public DateTime? RefreshTokenExpiryDate { get; set; }

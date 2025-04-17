@@ -6,8 +6,7 @@ using ServerLibrary.Services.Contracts;
 namespace Server.Controllers
 {
     [ApiController]
-    //[Authorize(Roles = "Admin")]
-    [Route("[controller]")]
+    [Route("product")]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
@@ -24,118 +23,83 @@ namespace Server.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateProduct([FromBody] Product product, CancellationToken cancellationToken)
         {
-            try
+            if (string.IsNullOrWhiteSpace(product.Name))
             {
-                if (string.IsNullOrWhiteSpace(product.Name))
-                {
-                    _logger.LogWarning("Попытка создать товар с пустым телом запроса.");
-                    return BadRequest("Название товара не может быть пустым.");
-                }
-
-                var createdProduct = await _productService.Create(product, cancellationToken);
-                _logger.LogInformation($"Товар {createdProduct.Name} успешно создан");
-
-                //return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
-                return Ok(new { message = $"Продукт {product.Name} успешно создан" });
+                _logger.LogWarning("Попытка создать товар с пустым телом запроса.");
+                return BadRequest("Название товара не может быть пустым.");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при создании товара.");
-                return StatusCode(500, "Не корректно введенные данные");
-            }
+
+            var createdProduct = await _productService.Create(product, cancellationToken);
+            _logger.LogInformation($"Товар {createdProduct.Name} успешно создан");
+
+            //return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
+            return Ok(new { message = $"Продукт {product.Name} успешно создан" });
+
         }
 
         [HttpGet("getAll")]
         public ActionResult<IEnumerable<Product>> GetAllProducts(CancellationToken cancellationToken)
         {
-            try
-            {
-                var products = _productService.GetAll(cancellationToken);
-                _logger.LogInformation("Запрос на получение всех товаров.");
+            var products = _productService.GetAll(cancellationToken);
+            _logger.LogInformation("Запрос на получение всех товаров.");
 
-                return Ok(products);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка при получении товара.");
-                return StatusCode(500, "Внутренняя ошибка сервера.");
-            }
+            return Ok(products);
+
         }
 
         [HttpGet("getById")]
         public async Task<IActionResult> GetProductById(int id, CancellationToken cancellationToken)
         {
-            try
+            var product = await _productService.GetById(id, cancellationToken);
+            if (product == null)
             {
-                var product = await _productService.GetById(id, cancellationToken);
-                if (product == null)
-                {
-                    _logger.LogWarning($"Товар с ID {id} не найден.");
-                    return NotFound();
-                }
+                _logger.LogWarning($"Товар с ID {id} не найден.");
+                return NotFound();
+            }
 
-                return Ok(product);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Ошибка при получении товара с ID {id}.");
-                return StatusCode(500, "Внутренняя ошибка сервера.");
-            }
+            return Ok(product);
         }
+
 
         [Authorize(Roles = "Admin")]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, CancellationToken cancellationToken)
         {
-            try
+            if (product == null)
             {
-                if (product == null)
-                {
-                    _logger.LogWarning("Попытка обновить товар с пустым телом запроса.");
-                    return BadRequest("Товар не может быть пустым.");
-                }
-
-                var updatedProduct = await _productService.Update(id, product, cancellationToken);
-                if (updatedProduct == null)
-                {
-                    _logger.LogWarning($"Товар с ID {id} не найден.");
-                    return NotFound();
-                }
-
-                _logger.LogInformation($"Товар с ID {id} был обновлен");
-                return Ok(updatedProduct);
+                _logger.LogWarning("Попытка обновить товар с пустым телом запроса.");
+                return BadRequest("Товар не может быть пустым.");
             }
-            catch (Exception ex)
+
+            var updatedProduct = await _productService.Update(id, product, cancellationToken);
+            if (updatedProduct == null)
             {
-                _logger.LogError(ex, "Ошибка при обновлении товара с ID {Id}.", id);
-                return StatusCode(500, "Внутренняя ошибка сервера.");
+                _logger.LogWarning($"Товар с ID {id} не найден.");
+                return NotFound();
             }
+
+            _logger.LogInformation($"Товар с ID {id} был обновлен");
+            return Ok(updatedProduct);
         }
+
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("delete")]
         public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
-            try
+            var result = await _productService.Delete(id, cancellationToken);
+            if (result is null)
             {
-                var result = await _productService.Delete(id, cancellationToken);
-                if (result is null)
-                {
-                    _logger.LogWarning($"Товар с ID {id} не найден при попытке удаления.");
-                    return NotFound();
-                }
+                _logger.LogWarning($"Товар с ID {id} не найден при попытке удаления.");
+                return NotFound();
+            }
 
-                return Ok(new
-                {
-                    message = $"Товар {result.Name} удален",
-                    id = result.Id
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                _logger.LogError(ex, $"Ошибка при удалении товара с ID {id}.");
-                return StatusCode(500, "Внутренняя ошибка сервера.");
-            }
+                message = $"Товар {result.Name} удален",
+                id = result.Id
+            });
         }
     }
 }
+

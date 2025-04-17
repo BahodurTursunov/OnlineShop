@@ -32,7 +32,9 @@ namespace ServerLibrary.Services.Implementations
             if (await _db.Users.AnyAsync(e => e.Email == entity.Email, cancellationToken))
             {
                 _logger.LogWarning($"Попытка создания пользователя с уже существующим Email: {entity.Email}");
+
                 throw new UserMailAlreadyExistException("Пользователь с таким Email уже существует.");
+
             }
 
             entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);

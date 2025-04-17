@@ -35,7 +35,7 @@ namespace ServerLibrary.Services.Implementations.Auth
 
             bool isPasswordValid = Verify(dto.Password, user.PasswordHash);
 
-            if (!isPasswordValid)
+            if (isPasswordValid)
             {
                 _logger.LogWarning("Неверный логин или пароль");
                 throw new UnauthorizedAccessException("Неверный логин или пароль");
@@ -62,7 +62,7 @@ namespace ServerLibrary.Services.Implementations.Auth
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 PasswordHash = Generate(dto.Password),
-                RoleId = 0,
+                Role = "User",
                 CreatedAt = DateTime.UtcNow
             };
 
