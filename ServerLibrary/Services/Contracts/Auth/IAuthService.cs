@@ -10,7 +10,5 @@ namespace ServerLibrary.Services.Contracts.Auth
         Task<AuthResponseDTO> LoginAsync(LoginUserDTO dto, CancellationToken cancellationToken);
         Task<UserDTO> GetUserProfileAsync(int userId, CancellationToken cancellationToken);
         Task<AuthResponseDTO> RefreshTokenAsync(RefreshTokenDTO dto, CancellationToken cancellationToken);
-
-
     }
 }

@@ -14,6 +14,7 @@ namespace BaseLibrary.Entities
         [Required(ErrorMessage = "Имя пользователя обязательно к заполнению")]
         [StringLength(30, ErrorMessage = "Имя пользователя не должно превышать 30 символов")]
         public string Username { get; set; } = "";
+        public string FullName => $"{FirstName} {LastName}";
 
         [Required(ErrorMessage = "Email обязателен к заполнению")]
         [EmailAddress(ErrorMessage = "Неверный формат Email")]
@@ -22,6 +23,7 @@ namespace BaseLibrary.Entities
         [Required(ErrorMessage = "Пароль обязателен к заполнению")]
         [MinLength(6, ErrorMessage = "Пароль должен быть не менее 6 символов")]
         public string PasswordHash { get; set; } = "";
+
         public string Role { get; set; } = "User";
         public string AccessToken { get; set; } = "";
         public string RefreshToken { get; set; } = "";

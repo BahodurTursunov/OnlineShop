@@ -1,4 +1,5 @@
-﻿using BaseLibrary.DTOs;
+﻿using AutoMapper;
+using BaseLibrary.DTOs;
 using BaseLibrary.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,14 @@ namespace ServerLibrary.Services.Implementations.Auth
         private readonly ILogger<AuthService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IJwtService _jwtService;
+        private readonly IMapper _mapper;
 
 
-        public AuthService(ILogger<AuthService> logger, ApplicationDbContext dbContext, IJwtService jwtService)
+        public AuthService(ILogger<AuthService> logger, ApplicationDbContext dbContext, IJwtService jwtService, IMapper mapper)
         {
             _logger = logger;
             _dbContext = dbContext;
+            _mapper = mapper;
             _jwtService = jwtService;
         }
 
@@ -33,18 +36,25 @@ namespace ServerLibrary.Services.Implementations.Auth
                 throw new UnauthorizedAccessException("Неверный логин или пароль");
             }
 
-            bool isPasswordValid = Verify(dto.Password, user.PasswordHash);
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
 
-            if (isPasswordValid)
+            if (!isPasswordValid)
             {
                 _logger.LogWarning("Неверный логин или пароль");
                 throw new UnauthorizedAccessException("Неверный логин или пароль");
             }
 
             var token = await _jwtService.GenerateTokenAsync(user, cancellationToken);
+
+            var person = _mapper.Map<AuthResponseDTO>(user);
+            var response = _mapper.Map<AuthResponseDTO>(user);
+            response.AccessToken = token.AccessToken;
+            response.RefreshToken = token.RefreshToken;
+            response.ExpiresAt = token.ExpiresAt;
+
             _logger.LogInformation($"Пользователь {user.Username} успешно вошел в систему");
 
-            return token;
+            return response;
         }
 
         public async Task<UserDTO> RegisterAsync(RegisterUserDTO dto, CancellationToken cancellationToken)

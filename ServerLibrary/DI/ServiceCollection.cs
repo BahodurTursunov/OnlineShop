@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BaseLibrary.Mapping;
+using Microsoft.Extensions.DependencyInjection;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services.Contracts;
@@ -10,12 +11,20 @@ namespace ServerLibrary.DI
 {
     public static class ServiceCollection
     {
-        public static void AddServices(this IServiceCollection services)
+        public static void AddMyServices(this IServiceCollection services)
         {
+            /*  services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
+              services.AddScoped<IUserService, UserService>();
+              services.AddScoped<IAuthService, AuthService>();*/
+            //
             services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IJwtService, JwtService>();
 
+            services.AddAutoMapper(typeof(UserProfile));
         }
     }
 }

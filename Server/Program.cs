@@ -6,14 +6,9 @@ using Serilog;
 using Serilog.Events;
 using Server.Authorization;
 using ServerLibrary.Data;
+using ServerLibrary.DI;
 using ServerLibrary.Helpers;
 using ServerLibrary.Middleware;
-using ServerLibrary.Repositories.Contracts;
-using ServerLibrary.Repositories.Implementations;
-using ServerLibrary.Services.Contracts;
-using ServerLibrary.Services.Contracts.Auth;
-using ServerLibrary.Services.Implementations;
-using ServerLibrary.Services.Implementations.Auth;
 using System.Text;
 #endregion
 
@@ -56,12 +51,7 @@ namespace Server
             #endregion
 
             #region Registration Services
-            builder.Services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IProductService, ProductService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<ICategoryService, CategoryService>();
-            builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddMyServices();
             #endregion
 
             builder.Services.AddControllers();
@@ -100,10 +90,10 @@ namespace Server
             });
             #endregion
 
-            //builder.Services.AddMyAuth();
-            builder.Services.AddMyClaims();
+            builder.Services.AddMyAuth();
 
             builder.Services.AddAuthorization();
+            //builder.Services.AddMyClaims();
             builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
