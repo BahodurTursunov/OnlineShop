@@ -1,5 +1,6 @@
 ﻿using BaseLibrary.Mapping;
 using Microsoft.Extensions.DependencyInjection;
+using ServerLibrary.Authentication.Claim;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services.Contracts;
@@ -25,6 +26,7 @@ namespace ServerLibrary.DI
             services.AddScoped<IJwtService, JwtService>();
 
             services.AddAutoMapper(typeof(UserProfile));
+            services.AddMyClaims();
         }
     }
 }

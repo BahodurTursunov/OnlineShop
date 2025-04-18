@@ -1,4 +1,6 @@
-﻿namespace Server.Authorization
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace ServerLibrary.Authentication.Claim
 {
     public static class Claims
     {

@@ -1,5 +1,4 @@
 ﻿using BaseLibrary.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Repositories.Contracts;
@@ -25,8 +24,10 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<Category> Create(Category entity, CancellationToken cancellationToken)
         {
-            var existing = await _db.Categories
-                .FirstOrDefaultAsync(c => c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase), cancellationToken);
+            var existing = _db.Categories
+             .AsEnumerable() // выполнит SQL-запрос и перенесёт сравнение в память
+             .FirstOrDefault(c => c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase));
+
 
             if (existing != null)
             {

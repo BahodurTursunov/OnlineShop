@@ -61,16 +61,14 @@ namespace ServerLibrary.Services.Implementations.Auth
             return user;
         }
 
-        // === PRIVATE ===
-
         private string GenerateAccessToken(User user, CancellationToken cancellationToken)
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Name, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role) // ОБЯЗАТЕЛЬНО для [Authorize(Roles = "Admin")]
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));
@@ -90,7 +88,6 @@ namespace ServerLibrary.Services.Implementations.Auth
         private string GenerateRefreshToken()
         {
             return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-
         }
     }
 }

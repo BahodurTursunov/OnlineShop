@@ -4,11 +4,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
-using Server.Authorization;
 using ServerLibrary.Data;
 using ServerLibrary.DI;
 using ServerLibrary.Helpers;
 using ServerLibrary.Middleware;
+using System.Security.Claims;
 using System.Text;
 #endregion
 
@@ -86,14 +86,11 @@ namespace Server
                         new string[] {}
                     }
                 });
-
             });
             #endregion
 
-            builder.Services.AddMyAuth();
-
             builder.Services.AddAuthorization();
-            //builder.Services.AddMyClaims();
+
             builder.Services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
@@ -106,6 +103,7 @@ namespace Server
                         ValidIssuer = jwtSettings!.Issuer,
                         ValidAudience = jwtSettings.Audience,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                        RoleClaimType = ClaimTypes.Role,
                         ClockSkew = TimeSpan.Zero // убираем задержку в 5 минут
                     };
                 });

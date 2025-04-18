@@ -41,7 +41,7 @@ namespace ServerLibrary.Services.Implementations.Auth
             if (!isPasswordValid)
             {
                 _logger.LogWarning("Неверный логин или пароль");
-                throw new UnauthorizedAccessException("Неверный логин или пароль");
+                throw new UnauthorizedAccessException("Your password is incorrect!");
             }
 
             var token = await _jwtService.GenerateTokenAsync(user, cancellationToken);
