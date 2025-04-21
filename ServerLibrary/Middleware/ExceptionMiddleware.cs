@@ -51,6 +51,13 @@ namespace ServerLibrary.Middleware
                 var response = new { message = "Email already exist" };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
+            catch (DbUpdateDeleteException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                context.Response.StatusCode = (int)HttpStatusCode.Conflict;
+                var response = new { message = "Cannot delete or update object" };
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception");

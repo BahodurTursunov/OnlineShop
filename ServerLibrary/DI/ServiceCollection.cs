@@ -14,10 +14,6 @@ namespace ServerLibrary.DI
     {
         public static void AddMyServices(this IServiceCollection services)
         {
-            /*  services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
-              services.AddScoped<IUserService, UserService>();
-              services.AddScoped<IAuthService, AuthService>();*/
-            //
             services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IProductService, ProductService>();
@@ -25,8 +21,8 @@ namespace ServerLibrary.DI
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IJwtService, JwtService>();
 
-            services.AddAutoMapper(typeof(UserProfile));
             services.AddMyClaims();
+            services.AddAutoMapper(typeof(UserProfile));
         }
     }
 }

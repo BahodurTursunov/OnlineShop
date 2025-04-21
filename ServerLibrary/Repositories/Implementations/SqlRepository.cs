@@ -74,11 +74,11 @@ namespace ServerLibrary.Repositories.Implementations
                 return null;
             }
 
-            var existingItem = await _db.Set<T>().FirstOrDefaultAsync(i => i.Id == entity.Id, cancellationToken);
+            var existingItem = await _db.Set<T>().AsNoTracking().FirstOrDefaultAsync(i => i.Id == entity.Id, cancellationToken);
 
             if (existingItem != null)
             {
-                _db.Update(entity);
+                _db.Update(existingItem);
                 await _db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation($"Объект {entity.GetType().Name} успешно обновлен в базе данных");
             }

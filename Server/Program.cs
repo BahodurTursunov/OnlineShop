@@ -54,7 +54,11 @@ namespace Server
             builder.Services.AddMyServices();
             #endregion
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+                });
             builder.Services.AddOpenApi();
 
             #region SwaggerGen

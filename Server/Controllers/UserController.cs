@@ -52,7 +52,7 @@ namespace Server.Controllers
             if (user == null)
             {
                 _logger.LogWarning($"Пользователь с ID {id} не найден.");
-                return NotFound();
+                return NotFound(new { message = "Такой пользователь не найден" });
             }
             return Ok(user);
         }
