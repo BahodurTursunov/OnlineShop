@@ -1,8 +1,8 @@
 ﻿namespace ServerLibrary.Exceptions
 {
-    public class UserMailAlreadyExistException : Exception
+    public class UserMailAlreadyExistsException : Exception
     {
-        public UserMailAlreadyExistException(string message = "Пользователь с такой почтой уже существует") : base(message)
+        public UserMailAlreadyExistsException(string message = "A user with this email already exists.") : base(message)
         {
 
         }

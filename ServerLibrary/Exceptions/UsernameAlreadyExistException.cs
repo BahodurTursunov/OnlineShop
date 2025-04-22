@@ -1,8 +1,8 @@
 ﻿namespace ServerLibrary.Exceptions
 {
-    public class UsernameAlreadyExitstException : Exception
+    public class UsernameAlreadyExistsException : Exception
     {
-        public UsernameAlreadyExitstException(string message = "Пользователь с таким логином уже существует") : base(message) { }
+        public UsernameAlreadyExistsException(string message = "A user with this username already exists.") : base(message) { }
 
     }
 }

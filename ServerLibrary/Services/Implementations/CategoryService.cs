@@ -25,38 +25,43 @@ namespace ServerLibrary.Services.Implementations
         public async Task<Category> Create(Category entity, CancellationToken cancellationToken)
         {
             var existing = _db.Categories
-             .AsEnumerable() // выполнит SQL-запрос и перенесёт сравнение в память
+             .AsEnumerable() // executes SQL and compares in memory
              .FirstOrDefault(c => c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase));
-
 
             if (existing != null)
             {
-                _logger.LogWarning($"Категория с именем {entity.Name} уже существует.");
-                throw new InvalidOperationException($"Категория с именем {entity.Name} уже существует.");
+                _logger.LogWarning($"Category with name {entity.Name} already exists.");
+                throw new InvalidOperationException($"Category with name {entity.Name} already exists.");
+            }
+
+            if (entity == null)
+            {
+                _logger.LogWarning($"Category fields can not be empty");
+                throw new ArgumentNullException();
             }
 
             await _db.Categories.AddAsync(entity, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation($"Категория {entity.Name} успешно создана.");
+            _logger.LogInformation($"Category {entity.Name} was created successfully.");
             return entity;
         }
 
         public async Task<Category> Delete(int id, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Удаление категории с ID {id}");
+            _logger.LogInformation($"Deleting category with ID {id}");
 
             var category = await _db.Categories.FindAsync(id, cancellationToken);
             if (category == null)
             {
-                _logger.LogWarning($"Категория с ID {id} не найдена.");
-                throw new KeyNotFoundException($"Категория с ID {id} не найдена.");
+                _logger.LogWarning($"Category with ID {id} was not found.");
+                throw new KeyNotFoundException($"Category with ID {id} was not found.");
             }
 
             _db.Categories.Remove(category);
             await _db.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation($"Категория с ID {id} успешно удалена.");
+            _logger.LogInformation($"Category with ID {id} was deleted successfully.");
             return category;
         }
 
@@ -67,12 +72,12 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<Category> GetById(int id, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Поиск категории с ID {id}");
+            _logger.LogInformation($"Fetching category with ID {id}");
             var category = await _repository.GetById(id, cancellationToken);
             if (category == null)
             {
-                _logger.LogWarning($"Категория с ID {id} не найдена.");
-                throw new KeyNotFoundException($"Категория с ID {id} не найдена.");
+                _logger.LogWarning($"Category with ID {id} was not found.");
+                throw new KeyNotFoundException($"Category with ID {id} was not found.");
             }
 
             return category;
@@ -80,20 +85,41 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<Category> Update(int id, Category entity, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Попытка обновления категории с ID {id}");
+            _logger.LogInformation($"Attempting to update category with ID {id}");
+
+            if (entity == null)
+            {
+                _logger.LogWarning("Provided category entity is null.");
+                throw new ArgumentNullException(nameof(entity), "Category entity cannot be null.");
+            }
 
             var existing = await _db.Categories.FindAsync(id);
             if (existing == null)
             {
-                _logger.LogWarning($"Категория с ID {id} не найдена.");
-                throw new KeyNotFoundException($"Категория с ID {id} не найдена.");
+                _logger.LogWarning($"Category with ID {id} was not found.");
+                throw new KeyNotFoundException($"Category with ID {id} was not found.");
             }
 
+            // Check if another category with the same name already exists
+            var nameConflict = _db.Categories
+                .AsEnumerable()
+                .FirstOrDefault(c =>
+                    c.Id != id &&
+                    c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (nameConflict != null)
+            {
+                _logger.LogWarning($"Another category with name {entity.Name} already exists.");
+                throw new InvalidOperationException($"Another category with name {entity.Name} already exists.");
+            }
+
+            // Apply changes
             _db.Entry(existing).CurrentValues.SetValues(entity);
             await _db.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation($"Категория с ID {id} успешно обновлена.");
+            _logger.LogInformation($"Category with ID {id} was updated successfully.");
             return existing;
         }
+
     }
 }

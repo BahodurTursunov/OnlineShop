@@ -78,7 +78,7 @@ namespace ServerLibrary.Repositories.Implementations
 
             if (existingItem != null)
             {
-                _db.Update(existingItem);
+                _db.Update(entity);
                 await _db.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation($"Объект {entity.GetType().Name} успешно обновлен в базе данных");
             }

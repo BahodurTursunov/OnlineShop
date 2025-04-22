@@ -18,33 +18,28 @@ namespace Server.Controllers
             _logger = logger;
         }
 
-
         [Authorize(Roles = "Admin")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateProduct([FromBody] Product product, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(product.Name))
             {
-                _logger.LogWarning("Попытка создать товар с пустым телом запроса.");
-                return BadRequest("Название товара не может быть пустым.");
+                _logger.LogWarning("Attempt to create a product with an empty request body.");
+                return BadRequest("Product name cannot be empty.");
             }
 
             var createdProduct = await _productService.Create(product, cancellationToken);
-            _logger.LogInformation($"Товар {createdProduct.Name} успешно создан");
+            _logger.LogInformation($"Product {createdProduct.Name} successfully created.");
 
-            //return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
-            return Ok(new { message = $"Продукт {product.Name} успешно создан" });
-
+            return Ok(new { message = $"Product {product.Name} successfully created" });
         }
 
         [HttpGet("getAll")]
         public ActionResult<IEnumerable<Product>> GetAllProducts(CancellationToken cancellationToken)
         {
             var products = _productService.GetAll(cancellationToken);
-            _logger.LogInformation("Запрос на получение всех товаров.");
-
+            _logger.LogInformation("Request to retrieve all products.");
             return Ok(products);
-
         }
 
         [HttpGet("getById")]
@@ -53,35 +48,33 @@ namespace Server.Controllers
             var product = await _productService.GetById(id, cancellationToken);
             if (product == null)
             {
-                _logger.LogWarning($"Товар с ID {id} не найден.");
+                _logger.LogWarning($"Product with ID {id} not found.");
                 return NotFound();
             }
 
             return Ok(product);
         }
 
-
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, CancellationToken cancellationToken)
         {
             if (product == null)
             {
-                _logger.LogWarning("Попытка обновить товар с пустым телом запроса.");
-                return BadRequest("Товар не может быть пустым.");
+                _logger.LogWarning("Attempt to update a product with an empty request body.");
+                return BadRequest("Product cannot be empty.");
             }
 
             var updatedProduct = await _productService.Update(id, product, cancellationToken);
             if (updatedProduct == null)
             {
-                _logger.LogWarning($"Товар с ID {id} не найден.");
+                _logger.LogWarning($"Product with ID {id} not found.");
                 return NotFound();
             }
 
-            _logger.LogInformation($"Товар с ID {id} был обновлен");
+            _logger.LogInformation($"Product with ID {id} was updated.");
             return Ok(updatedProduct);
         }
-
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("delete")]
@@ -90,13 +83,13 @@ namespace Server.Controllers
             var result = await _productService.Delete(id, cancellationToken);
             if (result is null)
             {
-                _logger.LogWarning($"Товар с ID {id} не найден при попытке удаления.");
+                _logger.LogWarning($"Product with ID {id} not found when attempting to delete.");
                 return NotFound();
             }
 
             return Ok(new
             {
-                message = $"Товар {result.Name} удален",
+                message = $"Product {result.Name} deleted.",
                 id = result.Id
             });
         }

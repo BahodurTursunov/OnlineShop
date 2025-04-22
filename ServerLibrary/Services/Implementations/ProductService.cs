@@ -19,26 +19,44 @@ namespace ServerLibrary.Services.Implementations
             _repository = repository;
             _logger = logger;
         }
+
         public async Task<Product> Create(Product entity, CancellationToken cancellationToken)
         {
-            var product = await _repository.CreateAsync(entity, cancellationToken);
-            if (product == null)
+            if (entity == null)
             {
-                _logger.LogError($"Ошибка при добавлении продукта {entity.Name} в базу данных");
-                throw new Exception($"Ошибка при добавлении продукта {entity.Name} в базу данных");
+                _logger.LogWarning("Product entity cannot be null.");
+                throw new ArgumentNullException(nameof(entity), "Product entity cannot be null.");
             }
-            //await _db.AddAsync(entity);
-            //await _db.SaveChangesAsync();
 
-            _logger.LogInformation($"Продукт {entity.Name} успешно добавлен в базу данных");
+            if (string.IsNullOrWhiteSpace(entity.Name))
+            {
+                _logger.LogWarning("Product name cannot be empty.");
+                throw new ArgumentException("Product name cannot be empty.", nameof(entity.Name));
+            }
 
-            return entity;
+            var created = await _repository.CreateAsync(entity, cancellationToken);
+            if (created == null)
+            {
+                _logger.LogError($"Failed to add product {entity.Name} to the database.");
+                throw new InvalidOperationException($"Failed to add product {entity.Name} to the database.");
+            }
+
+            _logger.LogInformation($"Product {entity.Name} was successfully added to the database.");
+            return created;
         }
 
-        public Task<Product> Delete(int id, CancellationToken cancellationToken)
+        public async Task<Product> Delete(int id, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Продукт с ID {id} удаляется из базы данных");
-            return _repository.DeleteAsync(id, cancellationToken);
+            _logger.LogInformation($"Attempting to delete product with ID {id}.");
+
+            var existing = await _repository.GetById(id, cancellationToken);
+            if (existing == null)
+            {
+                _logger.LogWarning($"Product with ID {id} was not found.");
+                throw new KeyNotFoundException($"Product with ID {id} was not found.");
+            }
+
+            return await _repository.DeleteAsync(id, cancellationToken);
         }
 
         public IQueryable<Product> GetAll(CancellationToken cancellationToken)
@@ -48,14 +66,15 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<Product> GetById(int id, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Попытка получения товара с идентификатором {id} из базы данных");
-            var product = await _repository.GetById(id, cancellationToken);
+            _logger.LogInformation($"Retrieving product with ID {id}.");
 
-            if (product is null)
+            var product = await _repository.GetById(id, cancellationToken);
+            if (product == null)
             {
-                _logger.LogWarning($"Товар с идентификатором {id} не найден в базе данных");
-                throw new ArgumentNullException("Такого товара не существует");
+                _logger.LogWarning($"Product with ID {id} was not found.");
+                throw new KeyNotFoundException($"Product with ID {id} was not found.");
             }
+
             return product;
         }
 
@@ -63,40 +82,63 @@ namespace ServerLibrary.Services.Implementations
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentNullException("Имя товара не может быть пустым");
+                _logger.LogWarning("Product name cannot be null or empty.");
+                throw new ArgumentException("Product name cannot be null or empty.", nameof(name));
             }
 
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase), cancellationToken);
+            var product = await _db.Products
+                .FirstOrDefaultAsync(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase), cancellationToken);
 
             if (product == null)
             {
-                throw new KeyNotFoundException($"Товар с названием {name} не найден");
+                _logger.LogWarning($"Product with name '{name}' was not found.");
+                throw new KeyNotFoundException($"Product with name '{name}' was not found.");
             }
+
             return product;
         }
 
         public async Task<Product> Update(int id, Product entity, CancellationToken cancellationToken)
         {
-            try
+            _logger.LogInformation($"Attempting to update product with ID {id}.");
+
+            if (entity == null)
             {
-                _logger.LogInformation($"Попытка обновления продукта {id}");
-
-                var existingProduct = _repository.GetById(id, cancellationToken);
-
-                if (existingProduct is null)
-                {
-                    _logger.LogWarning($"Продукт с идентификатором {id} не найден в базе данных");
-                    throw new KeyNotFoundException($"Продукт с идентификатором {id} не найден в базе данных");
-                }
-                /*_db.Entry(existingProduct).CurrentValues.SetValues(entity);*/
-
-                return await _repository.UpdateAsync(entity, cancellationToken);
+                _logger.LogWarning("Product entity cannot be null.");
+                throw new ArgumentNullException(nameof(entity), "Product entity cannot be null.");
             }
-            catch (Exception)
+
+            var existingProduct = await _repository.GetById(id, cancellationToken);
+            if (existingProduct == null)
             {
-
-                throw;
+                _logger.LogWarning($"Product with ID {id} was not found.");
+                throw new KeyNotFoundException($"Product with ID {id} was not found.");
             }
+
+            // Check for duplicate product name (exclude self)
+            var duplicate = await _db.Products
+              .Where(p => p.Id != id && p.Name.ToLower() == entity.Name.ToLower())
+              .FirstOrDefaultAsync(cancellationToken);
+
+            if (duplicate != null)
+            {
+                _logger.LogWarning($"Product with name '{entity.Name}' already exists.");
+                throw new InvalidOperationException($"Product with name '{entity.Name}' already exists.");
+            }
+
+            // Update allowed fields only
+            existingProduct.Name = entity.Name;
+            existingProduct.Description = entity.Description;
+            existingProduct.Price = entity.Price;
+            existingProduct.CategoryId = entity.CategoryId;
+            existingProduct.Stock = entity.Stock;
+
+            // Save changes via repository
+            var updated = await _repository.UpdateAsync(existingProduct, cancellationToken);
+            _logger.LogInformation($"Product with ID {id} was successfully updated.");
+
+            return updated;
         }
+
     }
 }

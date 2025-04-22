@@ -19,19 +19,17 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [Authorize(Policy = "AdminOnly")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
         {
-
             if (user == null)
             {
-                _logger.LogWarning("Попытка создать пользователя с пустым телом запроса.");
-                return BadRequest("Пользователь не может быть пустым.");
+                _logger.LogWarning("Attempt to create a user with an empty request body.");
+                return BadRequest("User cannot be empty.");
             }
 
             var createdUser = await _userService.Create(user, cancellationToken);
-            _logger.LogInformation($"Пользователь {createdUser.Username} успешно создан");
+            _logger.LogInformation($"User {createdUser.Username} successfully created.");
 
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
         }
@@ -40,7 +38,7 @@ namespace Server.Controllers
         public ActionResult<IEnumerable<User>> GetAllUsers(CancellationToken cancellationToken)
         {
             var users = _userService.GetAll(cancellationToken);
-            _logger.LogInformation("Запрос на получение всех пользователей.");
+            _logger.LogInformation("Request to retrieve all users.");
 
             return Ok(users);
         }
@@ -51,8 +49,8 @@ namespace Server.Controllers
             var user = await _userService.GetById(id, cancellationToken);
             if (user == null)
             {
-                _logger.LogWarning($"Пользователь с ID {id} не найден.");
-                return NotFound(new { message = "Такой пользователь не найден" });
+                _logger.LogWarning($"User with ID {id} not found.");
+                return NotFound(new { message = "User not found" });
             }
             return Ok(user);
         }
@@ -64,18 +62,18 @@ namespace Server.Controllers
         {
             if (user == null)
             {
-                _logger.LogWarning("Попытка обновить пользователя с пустым телом запроса.");
-                return BadRequest("Пользователь не может быть пустым.");
+                _logger.LogWarning("Attempt to update a user with an empty request body.");
+                return BadRequest("User cannot be empty.");
             }
 
             var updatedUser = await _userService.Update(id, user, cancellationToken);
             if (updatedUser == null)
             {
-                _logger.LogWarning($"Пользователь с ID {id} не найден.");
+                _logger.LogWarning($"User with ID {id} not found.");
                 return NotFound();
             }
 
-            _logger.LogInformation($"Пользователь с ID {id} был обновлен");
+            _logger.LogInformation($"User with ID {id} was updated.");
             return Ok(updatedUser);
         }
 
@@ -86,15 +84,16 @@ namespace Server.Controllers
             var result = await _userService.Delete(id, cancellationToken);
             if (result is null)
             {
-                _logger.LogWarning($"Пользователь с ID {id} не найден при попытке удаления.");
+                _logger.LogWarning($"User with ID {id} not found when attempting to delete.");
                 return NotFound();
             }
 
             return Ok(new
             {
-                message = $"Пользователь {result.Username} удален",
+                message = $"User {result.Username} deleted.",
                 id = result.Id
             });
         }
     }
 }
+

@@ -24,12 +24,12 @@ namespace Server.Controllers
         {
             if (string.IsNullOrWhiteSpace(category.Name))
             {
-                _logger.LogWarning("Попытка создать категорию с пустым названием.");
-                return BadRequest("Название категории не может быть пустым.");
+                _logger.LogWarning("Attempt to create a category with an empty name.");
+                return BadRequest("The category name cannot be empty..");
             }
 
             var createdCategory = await _categoryService.Create(category, cancellationToken);
-            _logger.LogInformation($"Категория '{createdCategory.Name}' успешно создана.");
+            _logger.LogInformation($"Category '{createdCategory.Name}' successfully created.");
 
             return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.Id }, createdCategory);
         }
@@ -38,7 +38,7 @@ namespace Server.Controllers
         public IActionResult GetAllCategories(CancellationToken cancellationToken)
         {
             var categories = _categoryService.GetAll(cancellationToken);
-            _logger.LogInformation("Запрос на получение всех категорий.");
+            _logger.LogInformation("Request to retrieve all categories.");
             return Ok(categories);
         }
 
@@ -48,7 +48,7 @@ namespace Server.Controllers
             var category = await _categoryService.GetById(id, cancellationToken);
             if (category == null)
             {
-                _logger.LogWarning($"Категория с ID {id} не найдена.");
+                _logger.LogWarning($"Category with ID {id} not found.");
                 return NotFound();
             }
 
@@ -62,18 +62,18 @@ namespace Server.Controllers
         {
             if (category == null)
             {
-                _logger.LogWarning("Попытка обновить категорию с пустым телом запроса.");
-                return BadRequest("Категория не может быть пустой.");
+                _logger.LogWarning("Attempt to update a category with an empty request body.");
+                return BadRequest("Category can not be empty.");
             }
 
             var updatedCategory = await _categoryService.Update(id, category, cancellationToken);
             if (updatedCategory == null)
             {
-                _logger.LogWarning($"Категория с ID {id} не найдена.");
+                _logger.LogWarning($"Category with ID {id} not found.");
                 return NotFound();
             }
 
-            _logger.LogInformation($"Категория с ID {id} была обновлена.");
+            _logger.LogInformation($"Category with ID {id} was update.");
             return Ok(updatedCategory);
         }
 
@@ -84,13 +84,13 @@ namespace Server.Controllers
             var deletedCategory = await _categoryService.Delete(id, cancellationToken);
             if (deletedCategory == null)
             {
-                _logger.LogWarning($"Категория с ID {id} не найдена при попытке удаления.");
+                _logger.LogWarning($"Category with ID {id} not found when attempting to delete.");
                 return NotFound();
             }
 
             return Ok(new
             {
-                message = $"Категория '{deletedCategory.Name}' удалена.",
+                message = $"Category '{deletedCategory.Name}' is deleted.",
                 id = deletedCategory.Id
             });
         }

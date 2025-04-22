@@ -62,7 +62,7 @@ namespace ServerLibrary.Middleware
             {
                 _logger.LogError(ex, "Unhandled exception");
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; // 500
-                var response = new { message = "Произошла ошибка на сервере", details = ex.Message };
+                var response = new { message = "Internal server error", details = ex.Message };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
         }
