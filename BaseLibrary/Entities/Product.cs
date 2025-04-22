@@ -22,11 +22,8 @@ namespace BaseLibrary.Entities
 
         [Column(TypeName = "numeric(18, 2)")]
         public decimal Discount { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int CategoryId { get; set; }
-
-        [JsonIgnore]
-        public Category? Category { get; set; }
+        public Category Category { get; set; }
 
         [JsonIgnore]
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

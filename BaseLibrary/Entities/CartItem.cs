@@ -10,7 +10,6 @@ namespace BaseLibrary.Entities
         public int ProductId { get; set; }
         public Product Product { get; set; }
 
-        [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Количество товара должно быть больше 0")]
         public int Quantity { get; set; }
     }

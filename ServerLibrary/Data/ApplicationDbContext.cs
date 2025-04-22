@@ -15,8 +15,27 @@ namespace ServerLibrary.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
-        public DbSet<Review> Rewiews { get; set; }
+        public DbSet<Review> Reviews { get; set; }
         public DbSet<Payment> Payments { get; set; }
+
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.Entity is BaseEntity && e.State is EntityState.Added or EntityState.Modified);
+
+            foreach (var entry in entries)
+            {
+                ((BaseEntity)entry.Entity).UpdatedAt = DateTime.UtcNow;
+
+                if (entry.State == EntityState.Added)
+                {
+                    ((BaseEntity)entry.Entity).CreatedAt = DateTime.UtcNow;
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -36,7 +55,7 @@ namespace ServerLibrary.Data
             // 1-N: User -> Cart
             modelBuilder.Entity<Cart>()
                 .HasOne(c => c.User)
-                .WithOne()
+                .WithOne(u => u.Cart)
                 .HasForeignKey<Cart>(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -72,6 +91,11 @@ namespace ServerLibrary.Data
                 .HasForeignKey(ci => ci.ProductId)
                 .OnDelete(DeleteBehavior.Restrict); // Нельзя удалить продукт, если он в корзине
 
+            modelBuilder.Entity<CartItem>()
+                .HasIndex(ci => new { ci.CartId, ci.ProductId })
+                .IsUnique(); // Чтобы исключить дубликаты товара в корзине, особенно при параллельных запросах.
+
+
             // 1-N: Product -> Reviews
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Product)
@@ -82,7 +106,7 @@ namespace ServerLibrary.Data
             // 1-N: User -> Reviews
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
-                .WithMany()
+                .WithMany(u => u.Rew)
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -150,7 +174,7 @@ namespace ServerLibrary.Data
                     LastName = "Петров",
                     Username = "vanya01",
                     Email = "ivan.petrov@example.com",
-                    PasswordHash = "q1w2e3321",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("q1w2e3123"),
                     Role = "User",
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }

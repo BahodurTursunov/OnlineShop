@@ -9,7 +9,6 @@ namespace BaseLibrary.Entities
         [MaxLength(100, ErrorMessage = "Название не должно превышать 100 ")]
         public string Name { get; set; } = "";
         //public int ChildCategoryId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [JsonIgnore]
         public ICollection<Product> Products { get; set; } = new List<Product>();

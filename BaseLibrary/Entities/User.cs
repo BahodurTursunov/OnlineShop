@@ -28,12 +28,14 @@ namespace BaseLibrary.Entities
         public string AccessToken { get; set; } = "";
         public string RefreshToken { get; set; } = "";
         public DateTime? RefreshTokenExpiryDate { get; set; }
-        //public Role Role { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [JsonIgnore]
-        public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+        public Cart Cart { get; set; }
+
         [JsonIgnore]
         public ICollection<Order> Orders { get; set; } = new List<Order>();
+
+        [JsonIgnore]
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }
