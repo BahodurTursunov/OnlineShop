@@ -62,7 +62,7 @@ namespace ServerLibrary.Services.Implementations.Auth
             if (await _dbContext.Users.AnyAsync(u => u.Username == dto.Username || u.Email == dto.Email))
             {
                 _logger.LogWarning("Пользователь с таким логином или почтой уже существует");
-                throw new UsernameAlreadyExitstException();
+                throw new UsernameAlreadyExistsException();
             }
 
             var user = new User

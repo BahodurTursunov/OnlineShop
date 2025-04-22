@@ -41,7 +41,88 @@ namespace ServerLibrary.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // 1-N: User -> Orders
+
+            ConfigureUser(modelBuilder);
+            ConfigureProduct(modelBuilder);
+            ConfigureCart(modelBuilder);
+            ConfigureOrder(modelBuilder);
+            ConfigureReview(modelBuilder);
+            ConfigurePayment(modelBuilder);
+
+            SeedData(modelBuilder);
+        }
+
+        private static void ConfigureUser(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+        }
+
+        private static void ConfigureProduct(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Price)
+                .HasColumnType("numeric(18,2)");
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Discount)
+                .HasColumnType("numeric(18,2)");
+
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasMany(p => p.CartItems)
+                .WithOne(ci => ci.Product)
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasMany(p => p.OrderItems)
+                .WithOne(oi => oi.Product)
+                .HasForeignKey(oi => oi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasMany(p => p.Reviews)
+                .WithOne(r => r.Product)
+                .HasForeignKey(r => r.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+
+        private static void ConfigureCart(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Cart>()
+                .HasOne(c => c.User)
+                .WithOne(u => u.Cart)
+                .HasForeignKey<Cart>(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Cart)
+                .WithMany(c => c.CartItems)
+                .HasForeignKey(ci => ci.CartId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CartItem>()
+                .HasIndex(ci => new { ci.CartId, ci.ProductId })
+                .IsUnique();
+        }
+
+        private static void ConfigureOrder(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Order>()
+                .Property(o => o.Status)
+                .HasConversion<string>();
+
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
                 .WithMany(u => u.Orders)
@@ -52,14 +133,6 @@ namespace ServerLibrary.Data
                 .Property(o => o.TotalAmount)
                 .HasColumnType("numeric(18,2)");
 
-            // 1-N: User -> Cart
-            modelBuilder.Entity<Cart>()
-                .HasOne(c => c.User)
-                .WithOne(u => u.Cart)
-                .HasForeignKey<Cart>(c => c.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // 1-N: Order -> OrderItems
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
@@ -67,50 +140,21 @@ namespace ServerLibrary.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<OrderItem>()
-                .Property(o => o.UnitPrice)
+                .Property(oi => oi.UnitPrice)
                 .HasColumnType("numeric(18,2)");
+        }
 
-            // 1-N: Product -> OrderItems
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.Product)
-                .WithMany(p => p.OrderItems)
-                .HasForeignKey(oi => oi.ProductId)
-                .OnDelete(DeleteBehavior.Restrict); // Нельзя удалить продукт, если есть заказы
-
-            // 1-N: Cart -> CartItems
-            modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Cart)
-                .WithMany(c => c.CartItems)
-                .HasForeignKey(ci => ci.CartId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // 1-N: Product -> CartItems
-            modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Product)
-                .WithMany(p => p.CartItems)
-                .HasForeignKey(ci => ci.ProductId)
-                .OnDelete(DeleteBehavior.Restrict); // Нельзя удалить продукт, если он в корзине
-
-            modelBuilder.Entity<CartItem>()
-                .HasIndex(ci => new { ci.CartId, ci.ProductId })
-                .IsUnique(); // Чтобы исключить дубликаты товара в корзине, особенно при параллельных запросах.
-
-
-            // 1-N: Product -> Reviews
-            modelBuilder.Entity<Review>()
-                .HasOne(r => r.Product)
-                .WithMany(p => p.Reviews)
-                .HasForeignKey(r => r.ProductId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // 1-N: User -> Reviews
+        private static void ConfigureReview(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
-                .WithMany(u => u.Rew)
+                .WithMany()
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        }
 
-            // 1-N: Payment -> Order
+        private static void ConfigurePayment(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Order)
                 .WithOne()
@@ -118,42 +162,15 @@ namespace ServerLibrary.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Payment>()
-                .Property(o => o.Amount)
+                .Property(p => p.Amount)
                 .HasColumnType("numeric(18,2)");
+        }
 
-            // 1-N: Category -> Products
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Category)
-                .WithMany(c => c.Products)
-                .HasForeignKey(p => p.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Product>()
-                .Property(o => o.Discount)
-                .HasColumnType("numeric(18,2)");
-
-            modelBuilder.Entity<Product>()
-                .Property(o => o.Price)
-                .HasColumnType("numeric(18,2)");
-
-            modelBuilder.Entity<Product>()
-                .Property(p => p.Id)
-                .ValueGeneratedOnAdd();  // Убедись, что для Id включена генерация значений
-
-
-            // 1-N: Category -> ChildCategory
-            modelBuilder.Entity<ChildCategory>()
-                .HasOne(cc => cc.Category)
-                .WithMany()
-                .HasForeignKey(cc => cc.CategoryId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-
-            // Добавление пользователей
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
-                .IsUnique(); // Устанавливаем уникальность имени пользователя
+        private static void SeedData(ModelBuilder modelBuilder)
+        {
+            // Используем заранее сгенерированные BCrypt-хеши
+            var passwordHash1 = "$2a$11$KlmfsQMS9aHuU56jghzUCeRj3Y5L8M07j6apT14Tlh27QXr6wFi3K"; // для q1w2e3123
+            var passwordHash2 = "$2a$11$UFGyAKF2jCbnBtaGgz9mVOX4Fev1WABX6r7PVZJ3oZDWxdtPqXkWy"; // другой, тоже фиксированный
 
             modelBuilder.Entity<User>().HasData(
                 new User
@@ -163,7 +180,7 @@ namespace ServerLibrary.Data
                     LastName = "Турсунов",
                     Username = "bakha",
                     Email = "tursunovb18@gmail.com",
-                    PasswordHash = "q1w2e3123", // TODO: заменить на хэшированный пароль
+                    PasswordHash = passwordHash1,
                     Role = "Admin",
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 },
@@ -174,19 +191,17 @@ namespace ServerLibrary.Data
                     LastName = "Петров",
                     Username = "vanya01",
                     Email = "ivan.petrov@example.com",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("q1w2e3123"),
+                    PasswordHash = passwordHash2,
                     Role = "User",
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
             );
 
-            // Добавление категорий
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Электроника", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
                 new Category { Id = 2, Name = "Одежда", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
             );
 
-            // Добавление товаров
             modelBuilder.Entity<Product>().HasData(
                 new Product
                 {
@@ -212,12 +227,10 @@ namespace ServerLibrary.Data
                 }
             );
 
-            // Добавление корзин (пустые)
             modelBuilder.Entity<Cart>().HasData(
                 new Cart { Id = 1, UserId = 2 }
             );
 
-            // Добавление заказов (примерный шаблон)
             modelBuilder.Entity<Order>().HasData(
                 new Order
                 {
@@ -229,27 +242,11 @@ namespace ServerLibrary.Data
                 }
             );
 
-            // Добавление элементов заказа
             modelBuilder.Entity<OrderItem>().HasData(
-                new OrderItem
-                {
-                    Id = 1,
-                    OrderId = 1,
-                    ProductId = 1,
-                    Quantity = 1,
-                    UnitPrice = 599.99m
-                },
-                new OrderItem
-                {
-                    Id = 2,
-                    OrderId = 1,
-                    ProductId = 2,
-                    Quantity = 1,
-                    UnitPrice = 19.99m
-                }
+                new OrderItem { Id = 1, OrderId = 1, ProductId = 1, Quantity = 1, UnitPrice = 599.99m },
+                new OrderItem { Id = 2, OrderId = 1, ProductId = 2, Quantity = 1, UnitPrice = 19.99m }
             );
 
-            // Добавление отзывов
             modelBuilder.Entity<Review>().HasData(
                 new Review
                 {
@@ -262,6 +259,13 @@ namespace ServerLibrary.Data
             );
 
 
+            modelBuilder.Entity<User>().HasData();
+            modelBuilder.Entity<Category>().HasData();
+            modelBuilder.Entity<Product>().HasData();
+            modelBuilder.Entity<Cart>().HasData();
+            modelBuilder.Entity<Order>().HasData();
+            modelBuilder.Entity<OrderItem>().HasData();
+            modelBuilder.Entity<Review>().HasData();
         }
 
     }

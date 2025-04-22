@@ -4,6 +4,8 @@ namespace BaseLibrary.Entities
 {
     public class CartItem : BaseEntity
     {
+        public decimal Amount { get; set; }
+
         public int CartId { get; set; }
         public Cart Cart { get; set; }
 

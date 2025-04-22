@@ -1,8 +1,10 @@
 ﻿using BaseLibrary.Mapping;
 using Microsoft.Extensions.DependencyInjection;
 using ServerLibrary.Authentication.Claim;
+using ServerLibrary.Repositories;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
+using ServerLibrary.Services;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Auth;
 using ServerLibrary.Services.Implementations;
@@ -20,6 +22,10 @@ namespace ServerLibrary.DI
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<ICartRepository, CartRepository>();
+            services.AddScoped<ICartService, CartService>();
+
+
 
             services.AddMyClaims();
             services.AddAutoMapper(typeof(UserProfile));
