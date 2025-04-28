@@ -19,7 +19,7 @@ namespace ServerLibrary.Data
         public DbSet<Payment> Payments { get; set; }
 
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        /*public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker.Entries()
                 .Where(e => e.Entity is BaseEntity && e.State is EntityState.Added or EntityState.Modified);
@@ -35,7 +35,7 @@ namespace ServerLibrary.Data
             }
 
             return await base.SaveChangesAsync(cancellationToken);
-        }
+        }*/
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -168,9 +168,12 @@ namespace ServerLibrary.Data
 
         private static void SeedData(ModelBuilder modelBuilder)
         {
-            // Используем заранее сгенерированные BCrypt-хеши
-            var passwordHash1 = "$2a$11$KlmfsQMS9aHuU56jghzUCeRj3Y5L8M07j6apT14Tlh27QXr6wFi3K"; // для q1w2e3123
-            var passwordHash2 = "$2a$11$UFGyAKF2jCbnBtaGgz9mVOX4Fev1WABX6r7PVZJ3oZDWxdtPqXkWy"; // другой, тоже фиксированный
+            // Фиксированные BCrypt-хэши для тестовых пользователей
+            const string passwordHash1 = "$2a$11$KlmfsQMS9aHuU56jghzUCeRj3Y5L8M07j6apT14Tlh27QXr6wFi3K"; // для «q1w2e3123»
+            const string passwordHash2 = "$2a$11$UFGyAKF2jCbnBtaGgz9mVOX4Fev1WABX6r7PVZJ3oZDWxdtPqXkWy"; // другой хэш
+
+            // Статическое время, не меняющееся при каждой сборке
+            var fixedCreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             modelBuilder.Entity<User>().HasData(
                 new User
@@ -182,7 +185,8 @@ namespace ServerLibrary.Data
                     Email = "tursunovb18@gmail.com",
                     PasswordHash = passwordHash1,
                     Role = "Admin",
-                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    CreatedAt = fixedCreatedAt,
+                    UpdatedAt = fixedCreatedAt
                 },
                 new User
                 {
@@ -193,13 +197,14 @@ namespace ServerLibrary.Data
                     Email = "ivan.petrov@example.com",
                     PasswordHash = passwordHash2,
                     Role = "User",
-                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    CreatedAt = fixedCreatedAt,
+                    UpdatedAt = fixedCreatedAt
                 }
             );
 
             modelBuilder.Entity<Category>().HasData(
-                new Category { Id = 1, Name = "Электроника", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
-                new Category { Id = 2, Name = "Одежда", CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+                new Category { Id = 1, Name = "Электроника", CreatedAt = fixedCreatedAt, UpdatedAt = fixedCreatedAt },
+                new Category { Id = 2, Name = "Одежда", CreatedAt = fixedCreatedAt, UpdatedAt = fixedCreatedAt }
             );
 
             modelBuilder.Entity<Product>().HasData(
@@ -212,7 +217,8 @@ namespace ServerLibrary.Data
                     Stock = 50,
                     Discount = 0m,
                     CategoryId = 1,
-                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    CreatedAt = fixedCreatedAt,
+                    UpdatedAt = fixedCreatedAt
                 },
                 new Product
                 {
@@ -223,12 +229,13 @@ namespace ServerLibrary.Data
                     Stock = 200,
                     Discount = 5m,
                     CategoryId = 2,
-                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    CreatedAt = fixedCreatedAt,
+                    UpdatedAt = fixedCreatedAt
                 }
             );
 
             modelBuilder.Entity<Cart>().HasData(
-                new Cart { Id = 1, UserId = 2 }
+                new Cart { Id = 1, UserId = 2, CreatedAt = fixedCreatedAt, UpdatedAt = fixedCreatedAt }
             );
 
             modelBuilder.Entity<Order>().HasData(
@@ -238,13 +245,14 @@ namespace ServerLibrary.Data
                     UserId = 2,
                     TotalAmount = 619.98m,
                     Status = Statuses.Pending,
-                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                    CreatedAt = fixedCreatedAt,
+                    UpdatedAt = fixedCreatedAt
                 }
             );
 
             modelBuilder.Entity<OrderItem>().HasData(
-                new OrderItem { Id = 1, OrderId = 1, ProductId = 1, Quantity = 1, UnitPrice = 599.99m },
-                new OrderItem { Id = 2, OrderId = 1, ProductId = 2, Quantity = 1, UnitPrice = 19.99m }
+                new OrderItem { Id = 1, OrderId = 1, ProductId = 1, Quantity = 1, UnitPrice = 599.99m, CreatedAt = fixedCreatedAt, UpdatedAt = fixedCreatedAt },
+                new OrderItem { Id = 2, OrderId = 1, ProductId = 2, Quantity = 1, UnitPrice = 19.99m, CreatedAt = fixedCreatedAt, UpdatedAt = fixedCreatedAt }
             );
 
             modelBuilder.Entity<Review>().HasData(
@@ -254,19 +262,13 @@ namespace ServerLibrary.Data
                     UserId = 2,
                     ProductId = 1,
                     Rating = 5,
-                    Comment = "Отличный смартфон, рекомендую!"
+                    Comment = "Отличный смартфон, рекомендую!",
+                    CreatedAt = fixedCreatedAt,
+                    UpdatedAt = fixedCreatedAt
                 }
             );
-
-
-            modelBuilder.Entity<User>().HasData();
-            modelBuilder.Entity<Category>().HasData();
-            modelBuilder.Entity<Product>().HasData();
-            modelBuilder.Entity<Cart>().HasData();
-            modelBuilder.Entity<Order>().HasData();
-            modelBuilder.Entity<OrderItem>().HasData();
-            modelBuilder.Entity<Review>().HasData();
         }
+
 
     }
 }

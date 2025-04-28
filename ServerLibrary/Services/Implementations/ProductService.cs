@@ -132,11 +132,13 @@ namespace ServerLibrary.Services.Implementations
             existingProduct.Price = entity.Price;
             existingProduct.CategoryId = entity.CategoryId;
             existingProduct.Stock = entity.Stock;
+            existingProduct.UpdatedAt = DateTime.UtcNow;
 
             // Save changes via repository
             var updated = await _repository.UpdateAsync(existingProduct, cancellationToken);
             _logger.LogInformation($"Product with ID {id} was successfully updated.");
 
+            await _db.SaveChangesAsync(cancellationToken);
             return updated;
         }
 

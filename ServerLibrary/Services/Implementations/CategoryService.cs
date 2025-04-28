@@ -114,8 +114,10 @@ namespace ServerLibrary.Services.Implementations
             }
 
             // Apply changes
-            _db.Entry(existing).CurrentValues.SetValues(entity);
-            await _db.SaveChangesAsync(cancellationToken);
+            existing.Name = entity.Name;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(existing, cancellationToken);
 
             _logger.LogInformation($"Category with ID {id} was updated successfully.");
             return existing;

@@ -30,7 +30,7 @@ namespace BaseLibrary.Entities
         public DateTime? RefreshTokenExpiryDate { get; set; }
 
         [JsonIgnore]
-        public Cart Cart { get; set; }
+        public Cart? Cart { get; set; } // корзина
 
         [JsonIgnore]
         public ICollection<Order> Orders { get; set; } = new List<Order>();

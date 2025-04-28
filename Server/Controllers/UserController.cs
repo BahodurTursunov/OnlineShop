@@ -56,7 +56,6 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [Authorize(Policy = "AdminOnly")]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user, CancellationToken cancellationToken)
         {
@@ -67,6 +66,7 @@ namespace Server.Controllers
             }
 
             var updatedUser = await _userService.Update(id, user, cancellationToken);
+
             if (updatedUser == null)
             {
                 _logger.LogWarning($"User with ID {id} not found.");

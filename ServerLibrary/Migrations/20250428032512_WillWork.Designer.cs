@@ -12,15 +12,15 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250402095137_Init")]
-    partial class Init
+    [Migration("20250428032512_WillWork")]
+    partial class WillWork
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -32,6 +32,12 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -47,6 +53,8 @@ namespace ServerLibrary.Migrations
                         new
                         {
                             Id = 1,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             UserId = 2
                         });
                 });
@@ -59,8 +67,14 @@ namespace ServerLibrary.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
                     b.Property<int>("CartId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
@@ -68,16 +82,15 @@ namespace ServerLibrary.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CartId");
-
                     b.HasIndex("ProductId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("CartId", "ProductId")
+                        .IsUnique();
 
                     b.ToTable("CartItems");
                 });
@@ -90,9 +103,6 @@ namespace ServerLibrary.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ChildCategoryId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -100,6 +110,9 @@ namespace ServerLibrary.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -109,43 +122,17 @@ namespace ServerLibrary.Migrations
                         new
                         {
                             Id = 1,
-                            ChildCategoryId = 0,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Электроника"
+                            Name = "Электроника",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = 2,
-                            ChildCategoryId = 0,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Одежда"
+                            Name = "Одежда",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
-                });
-
-            modelBuilder.Entity("BaseLibrary.Entities.ChildCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("ChildCategory");
                 });
 
             modelBuilder.Entity("BaseLibrary.Entities.Order", b =>
@@ -159,11 +146,15 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -179,8 +170,9 @@ namespace ServerLibrary.Migrations
                         {
                             Id = 1,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Status = 4,
+                            Status = "Pending",
                             TotalAmount = 619.98m,
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             UserId = 2
                         });
                 });
@@ -193,6 +185,9 @@ namespace ServerLibrary.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("integer");
 
@@ -203,7 +198,10 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -217,18 +215,22 @@ namespace ServerLibrary.Migrations
                         new
                         {
                             Id = 1,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             OrderId = 1,
                             ProductId = 1,
                             Quantity = 1,
-                            UnitPrice = 599.99m
+                            UnitPrice = 599.99m,
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = 2,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             OrderId = 1,
                             ProductId = 2,
                             Quantity = 1,
-                            UnitPrice = 19.99m
+                            UnitPrice = 19.99m,
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -241,7 +243,10 @@ namespace ServerLibrary.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("integer");
@@ -251,6 +256,9 @@ namespace ServerLibrary.Migrations
 
                     b.Property<int>("PaymentMethod")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -280,7 +288,7 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<decimal>("Discount")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -288,10 +296,13 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int?>("Stock")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -309,7 +320,8 @@ namespace ServerLibrary.Migrations
                             Discount = 0m,
                             Name = "Смартфон",
                             Price = 599.99m,
-                            Stock = 50
+                            Stock = 50,
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
@@ -320,7 +332,8 @@ namespace ServerLibrary.Migrations
                             Discount = 5m,
                             Name = "Футболка",
                             Price = 19.99m,
-                            Stock = 200
+                            Stock = 200,
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -337,13 +350,22 @@ namespace ServerLibrary.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
 
                     b.Property<int>("Rating")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserId1")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -352,15 +374,19 @@ namespace ServerLibrary.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Rewiews");
+                    b.HasIndex("UserId1");
+
+                    b.ToTable("Reviews");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
                             Comment = "Отличный смартфон, рекомендую!",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ProductId = 1,
                             Rating = 5,
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             UserId = 2
                         });
                 });
@@ -372,6 +398,10 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -394,11 +424,19 @@ namespace ServerLibrary.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("integer");
+                    b.Property<DateTime?>("RefreshTokenExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -416,25 +454,29 @@ namespace ServerLibrary.Migrations
                         new
                         {
                             Id = 1,
+                            AccessToken = "",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "tursunovb18@gmail.com",
                             FirstName = "Баходурхон",
                             LastName = "Турсунов",
-                            PasswordHash = "q1w2e3123",
-                            Role = 0,
-                            RoleId = 1,
+                            PasswordHash = "$2a$11$KlmfsQMS9aHuU56jghzUCeRj3Y5L8M07j6apT14Tlh27QXr6wFi3K",
+                            RefreshToken = "",
+                            Role = "Admin",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Username = "bakha"
                         },
                         new
                         {
                             Id = 2,
+                            AccessToken = "",
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "ivan.petrov@example.com",
                             FirstName = "Иван",
                             LastName = "Петров",
-                            PasswordHash = "q1w2e3321",
-                            Role = 0,
-                            RoleId = 0,
+                            PasswordHash = "$2a$11$UFGyAKF2jCbnBtaGgz9mVOX4Fev1WABX6r7PVZJ3oZDWxdtPqXkWy",
+                            RefreshToken = "",
+                            Role = "User",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Username = "vanya01"
                         });
                 });
@@ -442,7 +484,7 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("BaseLibrary.Entities.Cart", b =>
                 {
                     b.HasOne("BaseLibrary.Entities.User", "User")
-                        .WithOne()
+                        .WithOne("Cart")
                         .HasForeignKey("BaseLibrary.Entities.Cart", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -464,24 +506,9 @@ namespace ServerLibrary.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("BaseLibrary.Entities.User", null)
-                        .WithMany("CartItems")
-                        .HasForeignKey("UserId");
-
                     b.Navigation("Cart");
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("BaseLibrary.Entities.ChildCategory", b =>
-                {
-                    b.HasOne("BaseLibrary.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("BaseLibrary.Entities.Order", b =>
@@ -550,6 +577,10 @@ namespace ServerLibrary.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BaseLibrary.Entities.User", null)
+                        .WithMany("Reviews")
+                        .HasForeignKey("UserId1");
+
                     b.Navigation("Product");
 
                     b.Navigation("User");
@@ -581,9 +612,12 @@ namespace ServerLibrary.Migrations
 
             modelBuilder.Entity("BaseLibrary.Entities.User", b =>
                 {
-                    b.Navigation("CartItems");
+                    b.Navigation("Cart")
+                        .IsRequired();
 
                     b.Navigation("Orders");
+
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

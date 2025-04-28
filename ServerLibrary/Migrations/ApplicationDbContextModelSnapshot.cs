@@ -50,8 +50,8 @@ namespace ServerLibrary.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(251),
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(252),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             UserId = 2
                         });
                 });
@@ -121,14 +121,14 @@ namespace ServerLibrary.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Электроника",
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 676, DateTimeKind.Utc).AddTicks(8343)
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = 2,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Одежда",
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 676, DateTimeKind.Utc).AddTicks(8503)
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -169,7 +169,7 @@ namespace ServerLibrary.Migrations
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Status = "Pending",
                             TotalAmount = 619.98m,
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(708),
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             UserId = 2
                         });
                 });
@@ -212,22 +212,22 @@ namespace ServerLibrary.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(1194),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             OrderId = 1,
                             ProductId = 1,
                             Quantity = 1,
                             UnitPrice = 599.99m,
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(1194)
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(1655),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             OrderId = 1,
                             ProductId = 2,
                             Quantity = 1,
                             UnitPrice = 19.99m,
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(1655)
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -318,7 +318,7 @@ namespace ServerLibrary.Migrations
                             Name = "Смартфон",
                             Price = 599.99m,
                             Stock = 50,
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 676, DateTimeKind.Utc).AddTicks(9254)
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
@@ -330,7 +330,7 @@ namespace ServerLibrary.Migrations
                             Name = "Футболка",
                             Price = 19.99m,
                             Stock = 200,
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 676, DateTimeKind.Utc).AddTicks(9962)
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -380,10 +380,10 @@ namespace ServerLibrary.Migrations
                         {
                             Id = 1,
                             Comment = "Отличный смартфон, рекомендую!",
-                            CreatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(1849),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ProductId = 1,
                             Rating = 5,
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 677, DateTimeKind.Utc).AddTicks(1850),
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             UserId = 2
                         });
                 });
@@ -459,7 +459,7 @@ namespace ServerLibrary.Migrations
                             PasswordHash = "$2a$11$KlmfsQMS9aHuU56jghzUCeRj3Y5L8M07j6apT14Tlh27QXr6wFi3K",
                             RefreshToken = "",
                             Role = "Admin",
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 676, DateTimeKind.Utc).AddTicks(2649),
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Username = "bakha"
                         },
                         new
@@ -473,7 +473,7 @@ namespace ServerLibrary.Migrations
                             PasswordHash = "$2a$11$UFGyAKF2jCbnBtaGgz9mVOX4Fev1WABX6r7PVZJ3oZDWxdtPqXkWy",
                             RefreshToken = "",
                             Role = "User",
-                            UpdatedAt = new DateTime(2025, 4, 22, 18, 29, 10, 676, DateTimeKind.Utc).AddTicks(3957),
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Username = "vanya01"
                         });
                 });
