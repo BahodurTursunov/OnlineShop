@@ -6,7 +6,7 @@ using ServerLibrary.Services.Contracts;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("category")]
+    [Route("v1/api")]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
@@ -19,7 +19,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("create")]
+        [HttpPost("categories")]
         public async Task<IActionResult> CreateCategory([FromBody] Category category, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(category.Name))
@@ -34,7 +34,7 @@ namespace Server.Controllers
             return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.Id }, createdCategory);
         }
 
-        [HttpGet("allCategories")]
+        [HttpGet("categories")]
         public IActionResult GetAllCategories(CancellationToken cancellationToken)
         {
             var categories = _categoryService.GetAll(cancellationToken);
@@ -42,7 +42,7 @@ namespace Server.Controllers
             return Ok(categories);
         }
 
-        [HttpGet("getById")]
+        [HttpGet("categories{id}")]
         public async Task<IActionResult> GetCategoryById(int id, CancellationToken cancellationToken)
         {
             var category = await _categoryService.GetById(id, cancellationToken);
@@ -57,7 +57,7 @@ namespace Server.Controllers
 
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("update")]
+        [HttpPut("categories{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category category, CancellationToken cancellationToken)
         {
             if (category == null)
@@ -78,7 +78,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("delete")]
+        [HttpDelete("categories{id}")]
         public async Task<IActionResult> DeleteCategory(int id, CancellationToken cancellationToken)
         {
             var deletedCategory = await _categoryService.Delete(id, cancellationToken);

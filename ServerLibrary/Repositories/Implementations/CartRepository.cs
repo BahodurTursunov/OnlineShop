@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ServerLibrary.Data;
 using ServerLibrary.Repositories.Contracts;
 
-namespace ServerLibrary.Repositories
+namespace ServerLibrary.Repositories.Implementations
 {
     public class CartRepository : ICartRepository
     {

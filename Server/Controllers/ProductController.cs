@@ -6,7 +6,7 @@ using ServerLibrary.Services.Contracts;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("product")]
+    [Route("v1/api")]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
@@ -19,7 +19,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("create")]
+        [HttpPost("products")]
         public async Task<IActionResult> CreateProduct([FromBody] Product product, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(product.Name))
@@ -34,7 +34,7 @@ namespace Server.Controllers
             return Ok(new { message = $"Product {product.Name} successfully created" });
         }
 
-        [HttpGet("getAll")]
+        [HttpGet("products")]
         public ActionResult<IEnumerable<Product>> GetAllProducts(CancellationToken cancellationToken)
         {
             var products = _productService.GetAll(cancellationToken);
@@ -42,7 +42,7 @@ namespace Server.Controllers
             return Ok(products);
         }
 
-        [HttpGet("getById")]
+        [HttpGet("products{id}")]
         public async Task<IActionResult> GetProductById(int id, CancellationToken cancellationToken)
         {
             var product = await _productService.GetById(id, cancellationToken);
@@ -55,8 +55,8 @@ namespace Server.Controllers
             return Ok(product);
         }
 
-        //[Authorize(Roles = "Admin")]
-        [HttpPut("update")]
+        [Authorize(Roles = "Admin")]
+        [HttpPut("products{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, CancellationToken cancellationToken)
         {
             if (product == null)
@@ -77,7 +77,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("delete")]
+        [HttpDelete("products{id}")]
         public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
             var result = await _productService.Delete(id, cancellationToken);

@@ -6,7 +6,7 @@ using ServerLibrary.Services.Contracts;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("v1/api")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -19,7 +19,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("create")]
+        [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
         {
             if (user == null)
@@ -34,7 +34,7 @@ namespace Server.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
         }
 
-        [HttpGet("getAll")]
+        [HttpGet("users")]
         public ActionResult<IEnumerable<User>> GetAllUsers(CancellationToken cancellationToken)
         {
             var users = _userService.GetAll(cancellationToken);
@@ -43,7 +43,7 @@ namespace Server.Controllers
             return Ok(users);
         }
 
-        [HttpGet("getById")]
+        [HttpGet("users{id}")]
         public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
             var user = await _userService.GetById(id, cancellationToken);
@@ -56,7 +56,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("update")]
+        [HttpPut("users{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user, CancellationToken cancellationToken)
         {
             if (user == null)
@@ -78,7 +78,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("delete")]
+        [HttpDelete("users{id}")]
         public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
             var result = await _userService.Delete(id, cancellationToken);

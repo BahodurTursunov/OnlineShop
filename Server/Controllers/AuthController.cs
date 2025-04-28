@@ -5,7 +5,7 @@ using ServerLibrary.Services.Contracts.Auth;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("auth")]
+    [Route("v1/api")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
