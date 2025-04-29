@@ -21,10 +21,9 @@ namespace ServerLibrary.DI
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IJwtService, JwtService>();
+
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
-
-
 
             services.AddMyClaims();
             services.AddAutoMapper(typeof(UserProfile));

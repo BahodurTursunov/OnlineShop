@@ -128,6 +128,7 @@ namespace Server
 
             app.UseAuthentication(); // обязательно ДО UseAuthorization
             app.UseAuthorization();
+            app.UseMiddleware<ApiResponseMiddleware>();
 
             app.MapControllers();
             app.Run();
