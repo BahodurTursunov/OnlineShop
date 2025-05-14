@@ -7,7 +7,7 @@ namespace BaseLibrary.Entities
     public class Payment : BaseEntity
     {
         public int OrderId { get; set; }
-        public Order Order { get; set; }
+        public Order? Order { get; set; }
 
         [Required]
         [Column(TypeName = "numeric(18,2)")]

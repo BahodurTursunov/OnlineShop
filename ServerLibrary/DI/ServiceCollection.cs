@@ -8,6 +8,7 @@ using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Auth;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Implementations.Auth;
+using ServerLibrary.SignalR;
 
 namespace ServerLibrary.DI
 {
@@ -24,6 +25,17 @@ namespace ServerLibrary.DI
 
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
+
+            services.AddSignalR(hubOptions =>
+            {
+                hubOptions.EnableDetailedErrors = true;
+                hubOptions.KeepAliveInterval = TimeSpan.FromMinutes(1);
+            })
+            .AddHubOptions<ChatHub>(options =>
+            {
+                options.EnableDetailedErrors = false;
+                options.KeepAliveInterval = TimeSpan.FromMinutes(5);
+            });
 
             services.AddMyClaims();
             services.AddAutoMapper(typeof(UserProfile));

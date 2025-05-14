@@ -1,4 +1,5 @@
 #region Usages
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -8,6 +9,7 @@ using ServerLibrary.Data;
 using ServerLibrary.DI;
 using ServerLibrary.Helpers;
 using ServerLibrary.Middleware;
+using ServerLibrary.SignalR;
 using System.Security.Claims;
 using System.Text;
 #endregion
@@ -47,7 +49,6 @@ namespace Server
                 .LogTo(Console.Write, LogLevel.Information)
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
-
             #endregion
 
             #region Registration Services
@@ -114,6 +115,24 @@ namespace Server
 
 
             var app = builder.Build();
+
+            app.UseCors(options =>
+            {
+                options.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+
+            app.MapHub<ChatHub>("/chat", options =>
+            {
+                options.ApplicationMaxBufferSize = 128;
+                options.TransportMaxBufferSize = 128;
+                options.LongPolling.PollTimeout = TimeSpan.FromMinutes(1);
+                options.Transports = HttpTransportType.LongPolling | HttpTransportType.WebSockets;
+            });
 
             app.UseMiddleware<ExceptionMiddleware>();
 

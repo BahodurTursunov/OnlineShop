@@ -6,7 +6,7 @@ namespace BaseLibrary.Entities
     public class Order : BaseEntity
     {
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal TotalAmount { get; set; }

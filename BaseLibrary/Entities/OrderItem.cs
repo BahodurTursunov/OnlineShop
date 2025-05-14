@@ -6,10 +6,10 @@ namespace BaseLibrary.Entities
     public class OrderItem : BaseEntity
     {
         public int OrderId { get; set; }
-        public Order Order { get; set; }
+        public Order? Order { get; set; }
 
         public int ProductId { get; set; }
-        public Product Product { get; set; }
+        public Product? Product { get; set; }
 
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Количество товара должно быть больше 0")]

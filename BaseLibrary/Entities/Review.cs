@@ -5,10 +5,10 @@ namespace BaseLibrary.Entities
     public class Review : BaseEntity
     {
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
 
         public int ProductId { get; set; }
-        public Product Product { get; set; }
+        public Product? Product { get; set; }
 
         [Required]
         [Range(1, 5, ErrorMessage = "Оценка должна быть от 1 до 5")]
