@@ -37,6 +37,13 @@ namespace ServerLibrary.Middleware
                 var response = new { message = ex.Message };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; // 401
+                var response = new { message = "Your password is incorrect!" };
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+            }
             catch (UsernameAlreadyExistsException ex)
             {
                 _logger.LogError(ex, ex.Message);

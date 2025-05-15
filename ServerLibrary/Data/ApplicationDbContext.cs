@@ -41,131 +41,11 @@ namespace ServerLibrary.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            ConfigureUser(modelBuilder);
-            ConfigureProduct(modelBuilder);
-            ConfigureCart(modelBuilder);
-            ConfigureOrder(modelBuilder);
-            ConfigureReview(modelBuilder);
-            ConfigurePayment(modelBuilder);
-
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
             SeedData(modelBuilder);
         }
 
-        private static void ConfigureUser(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
-                .IsUnique();
-        }
-
-        private static void ConfigureProduct(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Product>()
-                .Property(p => p.Price)
-                .HasColumnType("numeric(18,2)");
-
-            modelBuilder.Entity<Product>()
-                .Property(p => p.Discount)
-                .HasColumnType("numeric(18,2)");
-
-            modelBuilder.Entity<Product>()
-                .Property(p => p.Id)
-                .ValueGeneratedOnAdd();
-
-            modelBuilder.Entity<Product>()
-                .HasOne(p => p.Category)
-                .WithMany(c => c.Products)
-                .HasForeignKey(p => p.CategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Product>()
-                .HasMany(p => p.CartItems)
-                .WithOne(ci => ci.Product)
-                .HasForeignKey(ci => ci.ProductId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Product>()
-                .HasMany(p => p.OrderItems)
-                .WithOne(oi => oi.Product)
-                .HasForeignKey(oi => oi.ProductId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Product>()
-                .HasMany(p => p.Reviews)
-                .WithOne(r => r.Product)
-                .HasForeignKey(r => r.ProductId)
-                .OnDelete(DeleteBehavior.Cascade);
-        }
-
-        private static void ConfigureCart(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Cart>()
-                .HasOne(c => c.User)
-                .WithOne(u => u.Cart)
-                .HasForeignKey<Cart>(c => c.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Cart)
-                .WithMany(c => c.CartItems)
-                .HasForeignKey(ci => ci.CartId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CartItem>()
-                .HasIndex(ci => new { ci.CartId, ci.ProductId })
-                .IsUnique();
-        }
-
-        private static void ConfigureOrder(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Order>()
-                .Property(o => o.Status)
-                .HasConversion<string>();
-
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.User)
-                .WithMany(u => u.Orders)
-                .HasForeignKey(o => o.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Order>()
-                .Property(o => o.TotalAmount)
-                .HasColumnType("numeric(18,2)");
-
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.Order)
-                .WithMany(o => o.OrderItems)
-                .HasForeignKey(oi => oi.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<OrderItem>()
-                .Property(oi => oi.UnitPrice)
-                .HasColumnType("numeric(18,2)");
-        }
-
-        private static void ConfigureReview(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Review>()
-                .HasOne(r => r.User)
-                .WithMany()
-                .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-        }
-
-        private static void ConfigurePayment(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Order)
-                .WithOne()
-                .HasForeignKey<Payment>(p => p.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Payment>()
-                .Property(p => p.Amount)
-                .HasColumnType("numeric(18,2)");
-        }
-
+        #region SeedData
         private static void SeedData(ModelBuilder modelBuilder)
         {
             // Фиксированные BCrypt-хэши для тестовых пользователей
@@ -268,7 +148,7 @@ namespace ServerLibrary.Data
                 }
             );
         }
-
+        #endregion
 
     }
 }

@@ -25,8 +25,14 @@ namespace BaseLibrary.Entities
         public string PasswordHash { get; set; } = "";
 
         public string Role { get; set; } = "User";
+
+
+
+        [JsonIgnore]
         public string AccessToken { get; set; } = "";
+        [JsonIgnore]
         public string RefreshToken { get; set; } = "";
+        [JsonIgnore]
         public DateTime? RefreshTokenExpiryDate { get; set; }
 
         [JsonIgnore]
