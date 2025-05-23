@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -9,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ServerLibrary.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,6 +29,25 @@ namespace ServerLibrary.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PromoCodes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    DiscountPercentage = table.Column<decimal>(type: "numeric(5,2)", nullable: false),
+                    ExpirationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    isActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    ExpireDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PromoCodes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -40,7 +58,7 @@ namespace ServerLibrary.Migrations
                     Username = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    Role = table.Column<string>(type: "text", nullable: false),
+                    Role = table.Column<string>(type: "text", nullable: false, defaultValue: "User"),
                     AccessToken = table.Column<string>(type: "text", nullable: false),
                     RefreshToken = table.Column<string>(type: "text", nullable: false),
                     RefreshTokenExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -96,7 +114,7 @@ namespace ServerLibrary.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -107,7 +125,9 @@ namespace ServerLibrary.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
+                    PromocodeId = table.Column<int>(type: "integer", nullable: false),
+                    OrderDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -115,11 +135,17 @@ namespace ServerLibrary.Migrations
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Orders_PromoCodes_PromocodeId",
+                        column: x => x.PromocodeId,
+                        principalTable: "PromoCodes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_Orders_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -131,7 +157,7 @@ namespace ServerLibrary.Migrations
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     ProductId = table.Column<int>(type: "integer", nullable: false),
                     Rating = table.Column<int>(type: "integer", nullable: false),
-                    Comment = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Comment = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
                     UserId1 = table.Column<int>(type: "integer", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -144,7 +170,7 @@ namespace ServerLibrary.Migrations
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Reviews_Users_UserId",
                         column: x => x.UserId,
@@ -168,6 +194,7 @@ namespace ServerLibrary.Migrations
                     CartId = table.Column<int>(type: "integer", nullable: false),
                     ProductId = table.Column<int>(type: "integer", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
+                    ProductId1 = table.Column<int>(type: "integer", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -185,7 +212,12 @@ namespace ServerLibrary.Migrations
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CartItems_Products_ProductId1",
+                        column: x => x.ProductId1,
+                        principalTable: "Products",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -209,7 +241,7 @@ namespace ServerLibrary.Migrations
                         column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_OrderItems_Products_ProductId",
                         column: x => x.ProductId,
@@ -226,8 +258,9 @@ namespace ServerLibrary.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     OrderId = table.Column<int>(type: "integer", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    PaymentMethod = table.Column<int>(type: "integer", nullable: false),
+                    PaymentMethod = table.Column<int>(type: "integer", maxLength: 30, nullable: false),
                     PaymentDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Status = table.Column<int>(type: "integer", maxLength: 30, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -239,7 +272,7 @@ namespace ServerLibrary.Migrations
                         column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.InsertData(
@@ -250,6 +283,11 @@ namespace ServerLibrary.Migrations
                     { 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Электроника", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
                     { 2, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Одежда", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
                 });
+
+            migrationBuilder.InsertData(
+                table: "PromoCodes",
+                columns: new[] { "Id", "Code", "CreatedAt", "DiscountPercentage", "ExpirationDate", "ExpireDate", "UpdatedAt" },
+                values: new object[] { 1, "NEWYEAR2024", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 10m, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) });
 
             migrationBuilder.InsertData(
                 table: "Users",
@@ -267,8 +305,8 @@ namespace ServerLibrary.Migrations
 
             migrationBuilder.InsertData(
                 table: "Orders",
-                columns: new[] { "Id", "CreatedAt", "Status", "TotalAmount", "UpdatedAt", "UserId" },
-                values: new object[] { 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Pending", 619.98m, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 2 });
+                columns: new[] { "Id", "CreatedAt", "OrderDate", "PromocodeId", "Status", "TotalAmount", "UpdatedAt", "UserId" },
+                values: new object[] { 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Pending", 619.98m, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 2 });
 
             migrationBuilder.InsertData(
                 table: "Products",
@@ -305,6 +343,11 @@ namespace ServerLibrary.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CartItems_ProductId1",
+                table: "CartItems",
+                column: "ProductId1");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Carts_UserId",
                 table: "Carts",
                 column: "UserId",
@@ -319,6 +362,11 @@ namespace ServerLibrary.Migrations
                 name: "IX_OrderItems_ProductId",
                 table: "OrderItems",
                 column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_PromocodeId",
+                table: "Orders",
+                column: "PromocodeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_UserId",
@@ -381,6 +429,9 @@ namespace ServerLibrary.Migrations
 
             migrationBuilder.DropTable(
                 name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "PromoCodes");
 
             migrationBuilder.DropTable(
                 name: "Users");

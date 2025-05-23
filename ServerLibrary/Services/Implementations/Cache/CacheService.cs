@@ -8,7 +8,7 @@ namespace ServerLibrary.Services.Implementations.Cache
     public class CacheService : ICacheService
     {
         private readonly IDistributedCache _cache;
-        private readonly ILogger<CacheService> _logger;
+        //private readonly ILogger<CacheService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
 
         public CacheService(IDistributedCache cache, ILogger<CacheService> logger)

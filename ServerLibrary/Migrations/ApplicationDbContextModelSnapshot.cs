@@ -76,6 +76,9 @@ namespace ServerLibrary.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ProductId1")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
@@ -85,6 +88,8 @@ namespace ServerLibrary.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductId1");
 
                     b.HasIndex("CartId", "ProductId")
                         .IsUnique();
@@ -143,9 +148,16 @@ namespace ServerLibrary.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PromocodeId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric(18,2)");
@@ -158,6 +170,8 @@ namespace ServerLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PromocodeId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Orders");
@@ -167,6 +181,8 @@ namespace ServerLibrary.Migrations
                         {
                             Id = 1,
                             CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            OrderDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            PromocodeId = 1,
                             Status = "Pending",
                             TotalAmount = 619.98m,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -252,6 +268,11 @@ namespace ServerLibrary.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("PaymentMethod")
+                        .HasMaxLength(30)
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasMaxLength(30)
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -334,6 +355,57 @@ namespace ServerLibrary.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BaseLibrary.Entities.PromoCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DiscountPercentage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpireDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("isActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PromoCodes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Code = "NEWYEAR2024",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DiscountPercentage = 10m,
+                            ExpirationDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ExpireDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            isActive = false
+                        });
+                });
+
             modelBuilder.Entity("BaseLibrary.Entities.Review", b =>
                 {
                     b.Property<int>("Id")
@@ -344,8 +416,8 @@ namespace ServerLibrary.Migrations
 
                     b.Property<string>("Comment")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -485,7 +557,7 @@ namespace ServerLibrary.Migrations
                     b.HasOne("BaseLibrary.Entities.User", "User")
                         .WithOne("Cart")
                         .HasForeignKey("BaseLibrary.Entities.Cart", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -500,10 +572,14 @@ namespace ServerLibrary.Migrations
                         .IsRequired();
 
                     b.HasOne("BaseLibrary.Entities.Product", "Product")
-                        .WithMany("CartItems")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("BaseLibrary.Entities.Product", null)
+                        .WithMany("CartItems")
+                        .HasForeignKey("ProductId1");
 
                     b.Navigation("Cart");
 
@@ -512,11 +588,19 @@ namespace ServerLibrary.Migrations
 
             modelBuilder.Entity("BaseLibrary.Entities.Order", b =>
                 {
+                    b.HasOne("BaseLibrary.Entities.PromoCode", "PromoCodes")
+                        .WithMany("Orders")
+                        .HasForeignKey("PromocodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BaseLibrary.Entities.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("PromoCodes");
 
                     b.Navigation("User");
                 });
@@ -526,7 +610,7 @@ namespace ServerLibrary.Migrations
                     b.HasOne("BaseLibrary.Entities.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BaseLibrary.Entities.Product", "Product")
@@ -543,9 +627,9 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("BaseLibrary.Entities.Payment", b =>
                 {
                     b.HasOne("BaseLibrary.Entities.Order", "Order")
-                        .WithOne()
+                        .WithOne("Payment")
                         .HasForeignKey("BaseLibrary.Entities.Payment", "OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -556,7 +640,7 @@ namespace ServerLibrary.Migrations
                     b.HasOne("BaseLibrary.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -567,7 +651,7 @@ namespace ServerLibrary.Migrations
                     b.HasOne("BaseLibrary.Entities.Product", "Product")
                         .WithMany("Reviews")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BaseLibrary.Entities.User", "User")
@@ -598,6 +682,8 @@ namespace ServerLibrary.Migrations
             modelBuilder.Entity("BaseLibrary.Entities.Order", b =>
                 {
                     b.Navigation("OrderItems");
+
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("BaseLibrary.Entities.Product", b =>
@@ -607,6 +693,11 @@ namespace ServerLibrary.Migrations
                     b.Navigation("OrderItems");
 
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("BaseLibrary.Entities.PromoCode", b =>
+                {
+                    b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("BaseLibrary.Entities.User", b =>

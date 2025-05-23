@@ -2,7 +2,7 @@
 
 namespace BaseLibrary.Entities
 {
-    public class CartItem : BaseEntity
+    public class CartItem /*данные корзины*/ : BaseEntity
     {
         public decimal Amount { get; set; }
 
@@ -13,6 +13,6 @@ namespace BaseLibrary.Entities
         public Product? Product { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Количество товара должно быть больше 0")]
-        public int Quantity { get; set; }
+        public int Quantity { get; set; } // количество
     }
 }

@@ -18,5 +18,6 @@ namespace BaseLibrary.Entities
 
         [Required]
         public DateTime PaymentDate { get; set; }
+        public PaymentStatus Status { get; set; }
     }
 }

@@ -31,7 +31,7 @@ namespace Server
 
             #region Logging
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug() // сначала уровень
+                .MinimumLevel.Debug() // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 .WriteTo.Console()
                 .WriteTo.File("logs/info_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information)
                 .WriteTo.File("logs/warning_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
@@ -74,7 +74,7 @@ namespace Server
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Просто вставьте токен сюда)"
+                    Description = "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ)"
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -109,7 +109,7 @@ namespace Server
                         ValidAudience = jwtSettings.Audience,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
                         RoleClaimType = ClaimTypes.Role,
-                        ClockSkew = TimeSpan.Zero // убираем задержку в 5 минут
+                        ClockSkew = TimeSpan.Zero
                     };
                 });
 
@@ -126,7 +126,7 @@ namespace Server
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            app.MapHub<ChatHub>("/chat", options =>
+            app.MapHub<SupportHub>("/support", options =>
             {
                 options.ApplicationMaxBufferSize = 128;
                 options.TransportMaxBufferSize = 128;
@@ -143,9 +143,9 @@ namespace Server
             }
             ;
             app.UseRouting();
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
 
-            app.UseAuthentication(); // обязательно ДО UseAuthorization
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<ApiResponseMiddleware>();
 

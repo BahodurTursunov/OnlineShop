@@ -31,7 +31,7 @@ namespace ServerLibrary.DI
                 hubOptions.EnableDetailedErrors = true;
                 hubOptions.KeepAliveInterval = TimeSpan.FromMinutes(1);
             })
-            .AddHubOptions<ChatHub>(options =>
+            .AddHubOptions<SupportHub>(options =>
             {
                 options.EnableDetailedErrors = false;
                 options.KeepAliveInterval = TimeSpan.FromMinutes(5);

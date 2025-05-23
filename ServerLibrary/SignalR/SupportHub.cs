@@ -2,7 +2,7 @@
 
 namespace ServerLibrary.SignalR
 {
-    public class ChatHub : Hub
+    public class SupportHub : Hub
     {
         public async Task Send(string message, string userName)
         {

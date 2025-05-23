@@ -16,6 +16,7 @@
         public static ApiResponse<T> SuccessResponse(T data)
         {
             return new ApiResponse<T>(true, data);
+            // TODO : посмотреть что выходит в мессаже 
         }
 
         public static ApiResponse<T> ErrorResponse(string message)

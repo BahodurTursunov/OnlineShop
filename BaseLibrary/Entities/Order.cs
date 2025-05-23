@@ -10,9 +10,12 @@ namespace BaseLibrary.Entities
 
         [Column(TypeName = "numeric(18,2)")]
         public decimal TotalAmount { get; set; }
+        public int PromocodeId { get; set; }
+        public PromoCode? PromoCodes { get; set; }
+        public DateTime OrderDate { get; set; }
         public Statuses Status { get; set; }
-
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public Payment? Payment { get; set; }
 
     }
 }

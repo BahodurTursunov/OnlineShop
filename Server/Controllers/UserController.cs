@@ -18,7 +18,7 @@ namespace Server.Controllers
             _logger = logger;
         }
 
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
         {
@@ -96,4 +96,3 @@ namespace Server.Controllers
         }
     }
 }
-

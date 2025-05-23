@@ -15,6 +15,6 @@ namespace BaseLibrary.Entities
         public int Rating { get; set; }
 
         [MaxLength(500, ErrorMessage = "Текст отзыва не должен превышать 500 символов")]
-        public string Comment { get; set; } = "";
+        public string Comment { get; set; } = string.Empty;
     }
 }

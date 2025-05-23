@@ -17,6 +17,7 @@ namespace ServerLibrary.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<PromoCode> PromoCodes { get; set; }
 
 
         /*public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -49,11 +50,11 @@ namespace ServerLibrary.Data
         private static void SeedData(ModelBuilder modelBuilder)
         {
             // Фиксированные BCrypt-хэши для тестовых пользователей
-            const string passwordHash1 = "$2a$11$KlmfsQMS9aHuU56jghzUCeRj3Y5L8M07j6apT14Tlh27QXr6wFi3K"; // для «q1w2e3123»
-            const string passwordHash2 = "$2a$11$UFGyAKF2jCbnBtaGgz9mVOX4Fev1WABX6r7PVZJ3oZDWxdtPqXkWy"; // другой хэш
+            const string passwordHash1 = "$2a$11$KlmfsQMS9aHuU56jghzUCeRj3Y5L8M07j6apT14Tlh27QXr6wFi3K";
+            const string passwordHash2 = "$2a$11$UFGyAKF2jCbnBtaGgz9mVOX4Fev1WABX6r7PVZJ3oZDWxdtPqXkWy";
 
             // Статическое время, не меняющееся при каждой сборке
-            var fixedCreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var fixedCreatedAt = DateTime.SpecifyKind(new DateTime(2024, 1, 1, 0, 0, 0), DateTimeKind.Utc);
 
             modelBuilder.Entity<User>().HasData(
                 new User
@@ -118,6 +119,18 @@ namespace ServerLibrary.Data
                 new Cart { Id = 1, UserId = 2, CreatedAt = fixedCreatedAt, UpdatedAt = fixedCreatedAt }
             );
 
+            modelBuilder.Entity<PromoCode>().HasData(
+              new PromoCode
+              {
+                  Id = 1,
+                  Code = "NEWYEAR2024",
+                  DiscountPercentage = 10,
+                  ExpirationDate = fixedCreatedAt,
+                  CreatedAt = fixedCreatedAt,
+                  UpdatedAt = fixedCreatedAt
+              }
+            );
+
             modelBuilder.Entity<Order>().HasData(
                 new Order
                 {
@@ -126,7 +139,8 @@ namespace ServerLibrary.Data
                     TotalAmount = 619.98m,
                     Status = Statuses.Pending,
                     CreatedAt = fixedCreatedAt,
-                    UpdatedAt = fixedCreatedAt
+                    UpdatedAt = fixedCreatedAt,
+                    PromocodeId = 1
                 }
             );
 
