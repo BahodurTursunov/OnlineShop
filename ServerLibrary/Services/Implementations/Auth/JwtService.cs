@@ -1,4 +1,5 @@
-﻿using BaseLibrary.DTOs;
+﻿using BaseLibrary;
+using BaseLibrary.DTOs;
 using BaseLibrary.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,42 +27,67 @@ namespace ServerLibrary.Services.Implementations.Auth
             _dbContext = dbContext;
 
             _refreshTokenExpirationDays = int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"] ?? "7");
-            _accessTokenExpirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15");
+            _accessTokenExpirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
         }
 
         public async Task<AuthResponseDTO> GenerateTokenAsync(User user, CancellationToken cancellationToken)
         {
-            var accessToken = GenerateAccessToken(user, cancellationToken);
-            var refreshToken = GenerateRefreshToken();
+            var accessToken = GenerateAccessToken(user);
+            var refreshTokenString = GenerateRefreshToken();
 
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryDate = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays);
+            var refreshToken = new RefreshToken
+            {
+                Token = refreshTokenString,
+                UserId = user.Id,
+                ExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
+                IsRevoked = false
+            };
 
-            _dbContext.Users.Update(user);
+            _dbContext.RefreshTokens.Add(refreshToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
+
 
             return new AuthResponseDTO
             {
                 AccessToken = accessToken,
-                RefreshToken = refreshToken,
+                RefreshToken = refreshToken.Token,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(_accessTokenExpirationMinutes)
             };
         }
 
         public async Task<User> ValidateRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
         {
-            var user = await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var token = await _dbContext.RefreshTokens
+                .Include(rt => rt.User)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken, cancellationToken);
 
-            if (user is null || user.RefreshTokenExpiryDate < DateTime.UtcNow)
+            if (token is null || token.IsRevoked || token.ExpiresAt < DateTime.UtcNow)
             {
                 return null;
             }
 
-            return user;
+            token.IsRevoked = true; // Отменяем токен после использования
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return token.User;
         }
 
-        private string GenerateAccessToken(User user, CancellationToken cancellationToken)
+
+        public async Task RevokeAllUserTokenAsync(int userId, CancellationToken cancellationToken)
+        {
+            var tokens = await _dbContext.RefreshTokens
+                .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                .ToListAsync(cancellationToken);
+
+            foreach (var token in tokens)
+            {
+                token.IsRevoked = true;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        private string GenerateAccessToken(User user)
         {
             var claims = new List<Claim>
             {

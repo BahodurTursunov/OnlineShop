@@ -1,4 +1,5 @@
-﻿using BaseLibrary.Entities;
+﻿using BaseLibrary;
+using BaseLibrary.Entities;
 using BaseLibrary.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,26 +19,7 @@ namespace ServerLibrary.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<PromoCode> PromoCodes { get; set; }
-
-
-        /*public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.Entity is BaseEntity && e.State is EntityState.Added or EntityState.Modified);
-
-            foreach (var entry in entries)
-            {
-                ((BaseEntity)entry.Entity).UpdatedAt = DateTime.UtcNow;
-
-                if (entry.State == EntityState.Added)
-                {
-                    ((BaseEntity)entry.Entity).CreatedAt = DateTime.UtcNow;
-                }
-            }
-
-            return await base.SaveChangesAsync(cancellationToken);
-        }*/
-
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

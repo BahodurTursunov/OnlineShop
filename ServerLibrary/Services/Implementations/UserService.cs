@@ -14,6 +14,7 @@ namespace ServerLibrary.Services.Implementations
         private readonly ILogger<UserService> _logger = logger;
         private readonly ApplicationDbContext _db = db;
 
+        #region CRUD Operations
         public async Task<User> Create(User entity, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Attempting to add user {entity.Username} to the database.");
@@ -119,5 +120,8 @@ namespace ServerLibrary.Services.Implementations
 
             return existingUser;
         }
+        #endregion
+
+
     }
 }

@@ -28,10 +28,7 @@ namespace BaseLibrary.Entities
 
         [JsonIgnore]
         public string AccessToken { get; set; } = string.Empty;
-        [JsonIgnore]
-        public string RefreshToken { get; set; } = string.Empty;
-        [JsonIgnore]
-        public DateTime? RefreshTokenExpiryDate { get; set; }
+
 
         [JsonIgnore]
         public Cart? Cart { get; set; } // корзина
