@@ -16,7 +16,7 @@ namespace ServerLibrary.Repositories.Implementations
             if (entity == null)
             {
                 _logger.LogWarning("Попытка добавить пустой объект в базу данных");
-                return null;
+                return null!;
             }
 
             try
@@ -29,7 +29,7 @@ namespace ServerLibrary.Repositories.Implementations
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Ошибка при добавлении объекта {entity?.GetType().Name} в базу данных");
-                return null;
+                return null!;
             }
         }
 
@@ -41,7 +41,7 @@ namespace ServerLibrary.Repositories.Implementations
             if (item == null)
             {
                 _logger.LogWarning($"Объект {typeof(T).Name} с ID {id} не найден для удаления");
-                return null;
+                return null!;
             }
 
             _db.Remove(item);
@@ -63,7 +63,7 @@ namespace ServerLibrary.Repositories.Implementations
                 _logger.LogWarning($"Объект {typeof(T).Name} с ID {id} не найден");
             }
 
-            return item;
+            return item!;
         }
 
         public async Task<T> UpdateAsync(T entity, CancellationToken cancellationToken)
@@ -71,7 +71,7 @@ namespace ServerLibrary.Repositories.Implementations
             if (entity == null)
             {
                 _logger.LogWarning("Попытка обновить пустой объект");
-                return null;
+                return null!;
             }
 
             var existingItem = await _db.Set<T>().AsNoTracking().FirstOrDefaultAsync(i => i.Id == entity.Id, cancellationToken);
@@ -84,7 +84,7 @@ namespace ServerLibrary.Repositories.Implementations
             }
             else
             {
-                return null;
+                return null!;
             }
 
             return entity;

@@ -63,7 +63,7 @@ namespace ServerLibrary.Services.Implementations.Auth
 
             if (token is null || token.IsRevoked || token.ExpiresAt < DateTime.UtcNow)
             {
-                return null;
+                return null!;
             }
 
             token.IsRevoked = true; // Отменяем токен после использования
@@ -113,7 +113,7 @@ namespace ServerLibrary.Services.Implementations.Auth
 
         private string GenerateRefreshToken()
         {
-            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(88));
         }
     }
 }
