@@ -71,7 +71,7 @@ namespace ServerLibrary.Services.Implementations.Auth
                 Email = dto.Email,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                PasswordHash = Generate(dto.Password),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Role = "User",
                 CreatedAt = DateTime.UtcNow
             };

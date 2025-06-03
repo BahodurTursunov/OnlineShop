@@ -31,7 +31,7 @@ namespace Server
 
             #region Logging
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug() // ������� �������
+                .MinimumLevel.Debug()
                 .WriteTo.Console()
                 .WriteTo.File("logs/info_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information)
                 .WriteTo.File("logs/warning_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
@@ -51,16 +51,30 @@ namespace Server
             });
             #endregion
 
+            #region Redis Cache
+            /*   builder.Services.AddStackExchangeRedisCache(options =>
+               {
+                   options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+                   options.InstanceName = "OnlineShop_";
+               });*/
+            #endregion
+
             #region Registration Services
             builder.Services.AddMyServices();
             #endregion
 
+            #region AddControllers 
+            // управляет тем, как будут кодироваться строки при сериализации в JSON
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
                 });
-            builder.Services.AddOpenApi();
+            #endregion
+
+            //builder.Services.AddOpenApi();
+
+            builder.Services.AddEndpointsApiExplorer(); // ОБЯЗАТЕЛЬНО
 
             #region SwaggerGen
             builder.Services.AddSwaggerGen(options =>
@@ -74,7 +88,7 @@ namespace Server
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "������ �������� ����� ����)"
+                    Description = ""
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -94,6 +108,7 @@ namespace Server
             });
             #endregion
 
+            #region Authorization and Authentication
             builder.Services.AddAuthorization();
 
             builder.Services.AddAuthentication("Bearer")
@@ -112,20 +127,22 @@ namespace Server
                         ClockSkew = TimeSpan.Zero
                     };
                 });
-
+            #endregion
 
             var app = builder.Build();
 
+            #region CORS
             app.UseCors(options =>
             {
                 options.AllowAnyOrigin()
                     .AllowAnyMethod()
                     .AllowAnyHeader();
             });
-
+            #endregion
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
+            #region Hub
             app.MapHub<SupportHub>("/support", options =>
             {
                 options.ApplicationMaxBufferSize = 128;
@@ -133,15 +150,21 @@ namespace Server
                 options.LongPolling.PollTimeout = TimeSpan.FromMinutes(1);
                 options.Transports = HttpTransportType.LongPolling | HttpTransportType.WebSockets;
             });
+            #endregion
 
+            #region Middleware
             app.UseMiddleware<ExceptionMiddleware>();
+            #endregion
 
-            if (app.Environment.IsDevelopment())
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            app.MapGet("/", ctx =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-            ;
+                ctx.Response.Redirect("/swagger");
+                return Task.CompletedTask;
+            });
+
             app.UseRouting();
             // app.UseHttpsRedirection();
 

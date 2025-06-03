@@ -10,12 +10,14 @@ namespace ServerLibrary.Services.Implementations
     public class ProductService : IProductService
     {
         private readonly ISqlRepository<Product> _repository;
+        //private readonly IDistributedCache _cache;
         private readonly ILogger<ProductService> _logger;
         private readonly ApplicationDbContext _db;
 
-        public ProductService(ISqlRepository<Product> repository, ILogger<ProductService> logger, ApplicationDbContext db)
+        public ProductService(ISqlRepository<Product> repository, ILogger<ProductService> logger, ApplicationDbContext db/*, IDistributedCache cache*/)
         {
             _db = db;
+            //_cache = cache;
             _repository = repository;
             _logger = logger;
         }
@@ -67,6 +69,15 @@ namespace ServerLibrary.Services.Implementations
         public async Task<Product> GetById(int id, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Retrieving product with ID {id}.");
+            /*
+                        var cacheKey = $"product:{id}";
+                        var cached = await _cache.GetStringAsync(cacheKey, cancellationToken);*/
+
+            /*     if (string.IsNullOrWhiteSpace(cached))
+                 {
+                     _logger.LogInformation($"Product with Id {id} retrueved from cache");
+                     return JsonSerializer.Deserialize<Product>(cached);
+                 }*/
 
             var product = await _repository.GetById(id, cancellationToken);
             if (product == null)
@@ -75,6 +86,12 @@ namespace ServerLibrary.Services.Implementations
                 throw new KeyNotFoundException($"Product with ID {id} was not found.");
             }
 
+            /*  await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(product), new DistributedCacheEntryOptions
+              {
+                  AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+                  SlidingExpiration = TimeSpan.FromMinutes(2)
+              }, cancellationToken);
+  */
             return product;
         }
 
@@ -115,7 +132,6 @@ namespace ServerLibrary.Services.Implementations
                 throw new KeyNotFoundException($"Product with ID {id} was not found.");
             }
 
-            // Check for duplicate product name (exclude self)
             var duplicate = await _db.Products
               .Where(p => p.Id != id && p.Name.ToLower() == entity.Name.ToLower())
               .FirstOrDefaultAsync(cancellationToken);
@@ -126,7 +142,6 @@ namespace ServerLibrary.Services.Implementations
                 throw new InvalidOperationException($"Product with name '{entity.Name}' already exists.");
             }
 
-            // Update allowed fields only
             existingProduct.Name = entity.Name;
             existingProduct.Description = entity.Description;
             existingProduct.Price = entity.Price;
@@ -134,7 +149,6 @@ namespace ServerLibrary.Services.Implementations
             existingProduct.Stock = entity.Stock;
             existingProduct.UpdatedAt = DateTime.UtcNow;
 
-            // Save changes via repository
             var updated = await _repository.UpdateAsync(existingProduct, cancellationToken);
             _logger.LogInformation($"Product with ID {id} was successfully updated.");
 
