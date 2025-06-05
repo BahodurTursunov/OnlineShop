@@ -1,51 +1,55 @@
 ﻿using BaseLibrary.Entities;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Exceptions;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
+using System.ComponentModel.DataAnnotations;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, ApplicationDbContext db) : IUserService
+    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, ApplicationDbContext db, IValidator<User> validator) : IUserService
     {
         private readonly ISqlRepository<User> _repository = repository;
         private readonly ILogger<UserService> _logger = logger;
         private readonly ApplicationDbContext _db = db;
+        private readonly IValidator<User> _validator = validator;
 
         #region CRUD Operations
-        public async Task<User> Create(User entity, CancellationToken cancellationToken)
+        public async Task<User> Create(User user, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Attempting to add user {entity.Username} to the database.");
+            _logger.LogInformation($"Attempting to add user {user.Username} to the database.");
 
-            if (string.IsNullOrWhiteSpace(entity.Username) || string.IsNullOrWhiteSpace(entity.Email))
+            if (string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Email))
             {
                 _logger.LogWarning("Validation error: Username and Email are required.");
                 throw new ArgumentException("Username and Email cannot be empty.");
             }
 
-            if (await _db.Users.AnyAsync(u => u.Username == entity.Username, cancellationToken))
+            if (await _db.Users.AnyAsync(u => u.Username == user.Username, cancellationToken))
             {
-                _logger.LogWarning($"User with username {entity.Username} already exists.");
+                _logger.LogWarning($"User with username {user.Username} already exists.");
                 throw new UsernameAlreadyExistsException();
             }
 
-            if (await _db.Users.AnyAsync(e => e.Email == entity.Email, cancellationToken))
+            if (await _db.Users.AnyAsync(e => e.Email == user.Email, cancellationToken))
             {
-                _logger.LogWarning($"Attempt to create a user with an already existing email: {entity.Email}");
+                _logger.LogWarning($"Attempt to create a user with an already existing email: {user.Email}");
                 throw new UserMailAlreadyExistsException();
             }
 
-            entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(entity.PasswordHash);
-            await _repository.CreateAsync(entity, cancellationToken);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
+            await _repository.CreateAsync(user, cancellationToken);
 
-            _logger.LogInformation($"User {entity.Username} was successfully added to the database.");
-            return entity;
+            _logger.LogInformation($"User {user.Username} was successfully added to the database.");
+            return user;
         }
 
         public async Task<User> Delete(int id, CancellationToken cancellationToken)
         {
+            ValidationResult result = await _validator.ValidateAsync()
             _logger.LogInformation($"Attempting to delete user with ID: {id}");
 
             var user = await _repository.GetById(id, cancellationToken);

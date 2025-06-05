@@ -70,6 +70,8 @@ namespace Server
                 {
                     options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
                 });
+
+
             #endregion
 
             //builder.Services.AddOpenApi();

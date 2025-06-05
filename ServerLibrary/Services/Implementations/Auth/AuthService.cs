@@ -84,6 +84,7 @@ namespace ServerLibrary.Services.Implementations.Auth
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
+                PasswordHash = user.PasswordHash
             };
         }
 
