@@ -11,6 +11,7 @@ namespace ServerLibrary.Validation
             RuleFor(x => x.Name).NotEmpty().Length(0, 50);
             RuleFor(x => x.Description).NotEmpty().Length(0, 500);
             RuleFor(x => x.Price).NotEmpty().NotNull().GreaterThan(0);
-         }
+        }
     }
+
 }
