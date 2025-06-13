@@ -7,20 +7,12 @@ using ServerLibrary.Services.Contracts;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class ProductService : IProductService
+    public class ProductService(ISqlRepository<Product> repository, ILogger<ProductService> logger, ApplicationDbContext db/*, IDistributedCache cache*/) : IProductService
     {
-        private readonly ISqlRepository<Product> _repository;
+        private readonly ISqlRepository<Product> _repository = repository;
         //private readonly IDistributedCache _cache;
-        private readonly ILogger<ProductService> _logger;
-        private readonly ApplicationDbContext _db;
-
-        public ProductService(ISqlRepository<Product> repository, ILogger<ProductService> logger, ApplicationDbContext db/*, IDistributedCache cache*/)
-        {
-            _db = db;
-            //_cache = cache;
-            _repository = repository;
-            _logger = logger;
-        }
+        private readonly ILogger<ProductService> _logger = logger;
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<Product> Create(Product entity, CancellationToken cancellationToken)
         {

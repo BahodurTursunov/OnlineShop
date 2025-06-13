@@ -6,21 +6,14 @@ using ServerLibrary.Services.Contracts;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class CategoryService : ICategoryService
+    public class CategoryService(
+        ISqlRepository<Category> repository,
+        ILogger<CategoryService> logger,
+        ApplicationDbContext db) : ICategoryService
     {
-        private readonly ISqlRepository<Category> _repository;
-        private readonly ILogger<CategoryService> _logger;
-        private readonly ApplicationDbContext _db;
-
-        public CategoryService(
-            ISqlRepository<Category> repository,
-            ILogger<CategoryService> logger,
-            ApplicationDbContext db)
-        {
-            _repository = repository;
-            _logger = logger;
-            _db = db;
-        }
+        private readonly ISqlRepository<Category> _repository = repository;
+        private readonly ILogger<CategoryService> _logger = logger;
+        private readonly ApplicationDbContext _db = db;
 
         public async Task<Category> Create(Category entity, CancellationToken cancellationToken)
         {

@@ -10,21 +10,12 @@ using ServerLibrary.Services.Contracts.Auth;
 
 namespace ServerLibrary.Services.Implementations.Auth
 {
-    public class AuthService : IAuthService
+    public class AuthService(ILogger<AuthService> logger, ApplicationDbContext dbContext, IJwtService jwtService, IMapper mapper) : IAuthService
     {
-        private readonly ILogger<AuthService> _logger;
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IJwtService _jwtService;
-        private readonly IMapper _mapper;
-
-
-        public AuthService(ILogger<AuthService> logger, ApplicationDbContext dbContext, IJwtService jwtService, IMapper mapper)
-        {
-            _logger = logger;
-            _dbContext = dbContext;
-            _mapper = mapper;
-            _jwtService = jwtService;
-        }
+        private readonly ILogger<AuthService> _logger = logger;
+        private readonly ApplicationDbContext _dbContext = dbContext;
+        private readonly IJwtService _jwtService = jwtService;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<AuthResponseDTO> LoginAsync(LoginUserDTO dto, CancellationToken cancellationToken)
         {
@@ -88,32 +79,32 @@ namespace ServerLibrary.Services.Implementations.Auth
             };
         }
 
-        public string Generate(string password)
-        {
-            return BCrypt.Net.BCrypt.EnhancedHashPassword(password);
-        }
+        //public string Generate(string password)
+        //{
+        //    return BCrypt.Net.BCrypt.EnhancedHashPassword(password);
+        //}
 
-        public bool Verify(string password, string passwordHash)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
-        }
+        //public bool Verify(string password, string passwordHash)
+        //{
+        //    return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+        //}
 
-        public async Task<UserDTO> GetUserProfileAsync(int userId, CancellationToken cancellationToken)
-        {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        //public async Task<UserDTO> GetUserProfileAsync(int userId, CancellationToken cancellationToken)
+        //{
+        //    var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
-            if (user == null)
-            {
-                throw new KeyNotFoundException("Пользователь не найден");
-            }
+        //    if (user == null)
+        //    {
+        //        throw new KeyNotFoundException("Пользователь не найден");
+        //    }
 
-            return new UserDTO
-            {
-                Username = user.Username,
-                Email = user.Email,
-                FirstName = user.FirstName
-            };
-        }
+        //    return new UserDTO
+        //    {
+        //        Username = user.Username,
+        //        Email = user.Email,
+        //        FirstName = user.FirstName
+        //    };
+        //}
 
         public async Task<AuthResponseDTO> RefreshTokenAsync(RefreshTokenDTO dto, CancellationToken cancellationToken)
         {

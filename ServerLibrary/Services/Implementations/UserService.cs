@@ -1,21 +1,19 @@
 ﻿using BaseLibrary.Entities;
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Exceptions;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
-using System.ComponentModel.DataAnnotations;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, ApplicationDbContext db, IValidator<User> validator) : IUserService
+    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, ApplicationDbContext db/*, IValidator<User> validator*/) : IUserService
     {
         private readonly ISqlRepository<User> _repository = repository;
         private readonly ILogger<UserService> _logger = logger;
         private readonly ApplicationDbContext _db = db;
-        private readonly IValidator<User> _validator = validator;
+        //private readonly IValidator<User> _validator = validator;
 
         #region CRUD Operations
         public async Task<User> Create(User user, CancellationToken cancellationToken)
@@ -49,7 +47,7 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<User> Delete(int id, CancellationToken cancellationToken)
         {
-            ValidationResult result = await _validator.ValidateAsync()
+            //ValidationResult result = await _validator.ValidateAsync();
             _logger.LogInformation($"Attempting to delete user with ID: {id}");
 
             var user = await _repository.GetById(id, cancellationToken);
