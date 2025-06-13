@@ -6,15 +6,10 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api/carts")]
-    public class CartController : ControllerBase
+    public class CartController(ICartService cartService, ILogger<CartController> logger) : ControllerBase
     {
-        private readonly ICartService _cartService;
-        private readonly ILogger<CartController> _logger;
-        public CartController(ICartService cartService, ILogger<CartController> logger)
-        {
-            _cartService = cartService;
-            _logger = logger;
-        }
+        private readonly ICartService _cartService = cartService;
+        private readonly ILogger<CartController> _logger = logger;
 
         [HttpPost]
         public async Task<IActionResult> CreateCart([FromBody] CreateCartDTO createCartDTO, CancellationToken cancellationToken)

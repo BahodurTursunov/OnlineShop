@@ -7,16 +7,10 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api")]
-    public class CategoryController : ControllerBase
+    public class CategoryController(ICategoryService categoryService, ILogger<CategoryController> logger) : ControllerBase
     {
-        private readonly ICategoryService _categoryService;
-        private readonly ILogger<CategoryController> _logger;
-
-        public CategoryController(ICategoryService categoryService, ILogger<CategoryController> logger)
-        {
-            _categoryService = categoryService;
-            _logger = logger;
-        }
+        private readonly ICategoryService _categoryService = categoryService;
+        private readonly ILogger<CategoryController> _logger = logger;
 
         [Authorize(Roles = "Admin")]
         [HttpPost("categories")]

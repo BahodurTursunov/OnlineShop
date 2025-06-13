@@ -7,16 +7,10 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api")]
-    public class ProductController : ControllerBase
+    public class ProductController(IProductService productService, ILogger<ProductController> logger) : ControllerBase
     {
-        private readonly IProductService _productService;
-        private readonly ILogger<ProductController> _logger;
-
-        public ProductController(IProductService productService, ILogger<ProductController> logger)
-        {
-            _productService = productService;
-            _logger = logger;
-        }
+        private readonly IProductService _productService = productService;
+        private readonly ILogger<ProductController> _logger = logger;
 
         [Authorize(Roles = "Admin")]
         [HttpPost("products")]
@@ -30,7 +24,6 @@ namespace Server.Controllers
 
             var createdProduct = await _productService.Create(product, cancellationToken);
             _logger.LogInformation($"Product {createdProduct.Name} successfully created.");
-
             return Ok(new { message = $"Product {product.Name} successfully created" });
         }
 
@@ -46,6 +39,7 @@ namespace Server.Controllers
         public async Task<IActionResult> GetProductById(int id, CancellationToken cancellationToken)
         {
             var product = await _productService.GetById(id, cancellationToken);
+
             if (product == null)
             {
                 _logger.LogWarning($"Product with ID {id} not found.");
@@ -66,6 +60,7 @@ namespace Server.Controllers
             }
 
             var updatedProduct = await _productService.Update(id, product, cancellationToken);
+
             if (updatedProduct == null)
             {
                 _logger.LogWarning($"Product with ID {id} not found.");
@@ -81,6 +76,7 @@ namespace Server.Controllers
         public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
             var result = await _productService.Delete(id, cancellationToken);
+
             if (result is null)
             {
                 _logger.LogWarning($"Product with ID {id} not found when attempting to delete.");
@@ -95,4 +91,3 @@ namespace Server.Controllers
         }
     }
 }
-

@@ -7,16 +7,10 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api")]
-    public class UserController : ControllerBase
+    public class UserController(IUserService userService, ILogger<UserController> logger) : ControllerBase
     {
-        private readonly IUserService _userService;
-        private readonly ILogger<UserController> _logger;
-
-        public UserController(IUserService userService, ILogger<UserController> logger)
-        {
-            _userService = userService;
-            _logger = logger;
-        }
+        private readonly IUserService _userService = userService;
+        private readonly ILogger<UserController> _logger = logger;
 
         [Authorize(Roles = "Admin")]
         [HttpPost("users")]
@@ -47,6 +41,7 @@ namespace Server.Controllers
         public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
             var user = await _userService.GetById(id, cancellationToken);
+
             if (user == null)
             {
                 _logger.LogWarning($"User with ID {id} not found.");
@@ -82,6 +77,7 @@ namespace Server.Controllers
         public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
             var result = await _userService.Delete(id, cancellationToken);
+
             if (result is null)
             {
                 _logger.LogWarning($"User with ID {id} not found when attempting to delete.");
