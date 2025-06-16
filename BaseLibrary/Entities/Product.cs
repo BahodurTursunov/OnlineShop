@@ -6,12 +6,9 @@ namespace BaseLibrary.Entities
 {
     public class Product : BaseEntity
     {
-        [Required(ErrorMessage = "Название товара обязательно к заполнению")]
-        [StringLength(100, ErrorMessage = "Название не может превышать 100 символов")]
         public string Name { get; set; } = string.Empty;
 
-        [MaxLength(500, ErrorMessage = "Описание к товару не может превышать 500 символов")]
-        public string Description { get; set; } = string.Empty;
+        public string? Description { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Цена товара обязательна к заполнению")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Цена товара должна быть больше 0")]
@@ -22,6 +19,8 @@ namespace BaseLibrary.Entities
 
         [Column(TypeName = "numeric(18, 2)")]
         public decimal Discount { get; set; }
+
+        [Required]
         public int CategoryId { get; set; }
 
         [JsonIgnore]

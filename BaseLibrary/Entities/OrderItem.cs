@@ -12,7 +12,6 @@ namespace BaseLibrary.Entities
         public Product? Product { get; set; }
 
         [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Количество товара должно быть больше 0")]
         public int Quantity { get; set; }
 
         [Required]
@@ -21,4 +20,5 @@ namespace BaseLibrary.Entities
         [Column(TypeName = "numeric(18,2)")]
         public decimal UnitPrice { get; set; }
     }
+
 }

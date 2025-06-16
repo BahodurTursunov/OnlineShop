@@ -7,16 +7,11 @@ namespace ServerLibrary.Validation
     {
         public CategoryValidation()
         {
-            RuleFor(x => x.Id)
-                .NotEmpty()
-                .NotNull();
-
             RuleFor(x => x.Name)
                 .NotEmpty()
-                .NotNull()
                 .MaximumLength(100)
-                .WithMessage("Название не должно превышать 100 символов");
+                .WithMessage("The title must not exceed 100 characters.")
+                .WithErrorCode("The title must not be empty.");
         }
     }
-
 }

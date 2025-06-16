@@ -4,29 +4,33 @@ using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
+using ServerLibrary.Validation;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class ProductService(ISqlRepository<Product> repository, ILogger<ProductService> logger, ApplicationDbContext db/*, IDistributedCache cache*/) : IProductService
+    public class ProductService(ISqlRepository<Product> repository, ILogger<ProductService> logger, ApplicationDbContext db, ProductValidation validations/*, IDistributedCache cache*/) : IProductService
     {
         private readonly ISqlRepository<Product> _repository = repository;
         //private readonly IDistributedCache _cache;
         private readonly ILogger<ProductService> _logger = logger;
         private readonly ApplicationDbContext _db = db;
+        private readonly ProductValidation validations = validations;
 
         public async Task<Product> Create(Product entity, CancellationToken cancellationToken)
         {
-            if (entity == null)
-            {
-                _logger.LogWarning("Product entity cannot be null.");
-                throw new ArgumentNullException(nameof(entity), "Product entity cannot be null.");
-            }
+            var result = validations.Validate(entity);
 
-            if (string.IsNullOrWhiteSpace(entity.Name))
-            {
-                _logger.LogWarning("Product name cannot be empty.");
-                throw new ArgumentException("Product name cannot be empty.", nameof(entity.Name));
-            }
+            //if (entity == null)
+            //{
+            //    _logger.LogWarning("Product entity cannot be null.");
+            //    throw new ArgumentNullException(nameof(entity), "Product entity cannot be null.");
+            //}
+
+            //if (string.IsNullOrWhiteSpace(entity.Name))
+            //{
+            //    _logger.LogWarning("Product name cannot be empty.");
+            //    throw new ArgumentException("Product name cannot be empty.", nameof(entity.Name));
+            //}
 
             var created = await _repository.CreateAsync(entity, cancellationToken);
             if (created == null)

@@ -9,6 +9,7 @@ using ServerLibrary.Services.Contracts.Auth;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Implementations.Auth;
 using ServerLibrary.SignalR;
+using ServerLibrary.Validation;
 
 namespace ServerLibrary.DI
 {
@@ -25,6 +26,12 @@ namespace ServerLibrary.DI
 
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<ProductValidation>();
+            services.AddScoped<CategoryValidation>();
+            services.AddScoped<OrderValidation>();
+            services.AddScoped<OrderItemValidation>();
+            services.AddScoped<UserValidation>();
+
 
             services.AddSignalR(hubOptions =>
             {

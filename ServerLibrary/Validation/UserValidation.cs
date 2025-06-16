@@ -13,25 +13,28 @@ namespace ServerLibrary.Validation
 
             RuleFor(x => x.FirstName)
                 .NotEmpty()
-                .Length(0, 20);
+                .Length(1, 20)
+                .WithMessage("The name must not exceed 20 characters.");
 
             RuleFor(x => x.LastName)
                 .NotEmpty()
-                .Length(0, 20);
+                .Length(1, 20)
+                .WithMessage("The lastname must not exceed 20 characters.");
 
             RuleFor(x => x.Email)
-                .EmailAddress();
+                .NotEmpty()
+                .EmailAddress()
+                .WithErrorCode("Email can not be empty");
 
             RuleFor(x => x.Username)
-                .NotNull()
+                .NotEmpty()
                 .Length(1, 20)
-                .NotEmpty();
+                .WithMessage("The username must not exceed 20 characters");
 
             RuleFor(x => x.PasswordHash)
                 .NotEmpty()
-                .NotNull()
                 .MinimumLength(6)
-                .WithMessage("Пароль должен иметь больше 6 символов");
+                .WithMessage("The password must be longer than 6 characters.");
         }
     }
 }

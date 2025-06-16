@@ -13,6 +13,7 @@ namespace BaseLibrary.Entities
         public int PromocodeId { get; set; }
         public PromoCode? PromoCodes { get; set; }
         public DateTime OrderDate { get; set; }
+        public DeliveryMethod DeliveryMethod { get; set; }
         public Statuses Status { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
         public Payment? Payment { get; set; }
