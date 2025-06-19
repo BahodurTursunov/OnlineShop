@@ -1,4 +1,6 @@
-﻿using BaseLibrary.Mapping;
+﻿using BaseLibrary.Entities;
+using BaseLibrary.Mapping;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using ServerLibrary.Authentication.Claim;
 using ServerLibrary.Repositories.Contracts;
@@ -26,13 +28,18 @@ namespace ServerLibrary.DI
 
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
+
             services.AddScoped<ProductValidation>();
             services.AddScoped<CategoryValidation>();
             services.AddScoped<OrderValidation>();
             services.AddScoped<OrderItemValidation>();
             services.AddScoped<UserValidation>();
-
-
+            services.AddScoped<IValidator<Product>, ProductValidation>();
+            services.AddScoped<IValidator<Category>, CategoryValidation>();
+            services.AddScoped<IValidator<User>, UserValidation>();
+            services.AddScoped<IValidator<Order>, OrderValidation>();
+            services.AddScoped<IValidator<OrderItem>, OrderItemValidation>();
+          
             services.AddSignalR(hubOptions =>
             {
                 hubOptions.EnableDetailedErrors = true;

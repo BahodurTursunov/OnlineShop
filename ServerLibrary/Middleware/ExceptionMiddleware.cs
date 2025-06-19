@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using BaseLibrary.DTOs;
+using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Exceptions;
 using System.Net;
@@ -65,6 +67,24 @@ namespace ServerLibrary.Middleware
                 var response = new { message = "Cannot delete or update object" };
                 await context.Response.WriteAsync(JsonSerializer.Serialize(response));
             }
+            catch (ValidationException validationEx)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                var messages = validationEx.Errors
+                    .Select(e => e.ErrorMessage)
+                    .ToArray();
+
+                var result = new ApiResponse<string>(
+                    success: false,
+                    message: string.Join("; ", messages),
+                    data: null
+                );
+
+                var json = JsonSerializer.Serialize(result);
+                await context.Response.WriteAsync(json);
+            }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception");

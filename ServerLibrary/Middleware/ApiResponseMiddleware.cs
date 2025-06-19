@@ -20,24 +20,35 @@ public class ApiResponseMiddleware
 
         try
         {
-            await _next(context); // вызываем следующий middleware
+            await _next(context);
 
             context.Response.Body.Seek(0, SeekOrigin.Begin);
             var body = await new StreamReader(context.Response.Body).ReadToEndAsync();
 
             context.Response.Body.Seek(0, SeekOrigin.Begin);
 
-            if (string.IsNullOrWhiteSpace(body))
+            if (string.IsNullOrWhiteSpace(body) || context.Response.StatusCode != StatusCodes.Status200OK)
             {
                 context.Response.Body = originalBodyStream;
+                await responseBody.CopyToAsync(originalBodyStream);
                 return;
             }
 
-            var response = ApiResponse<object>.SuccessResponse(JsonSerializer.Deserialize<object>(body));
+            object? parsedBody;
+            try
+            {
+                parsedBody = JsonSerializer.Deserialize<object>(body);
+            }
+            catch
+            {
+                parsedBody = body;
+            }
+
+            var response = ApiResponse<object>.SuccessResponse(parsedBody);
             var wrappedBody = JsonSerializer.Serialize(response);
 
             context.Response.ContentType = "application/json";
-            context.Response.ContentLength = wrappedBody.Length;
+            context.Response.ContentLength = System.Text.Encoding.UTF8.GetByteCount(wrappedBody);
 
             context.Response.Body = originalBodyStream;
             await context.Response.WriteAsync(wrappedBody);
