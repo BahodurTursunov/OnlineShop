@@ -14,7 +14,7 @@ namespace Server.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken) // предназначен для создания Админов системы
         {
             if (user == null)
             {
