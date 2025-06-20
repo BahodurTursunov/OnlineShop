@@ -11,7 +11,7 @@ namespace Server.Controllers
         private readonly IAuthService _authService = authService;
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterUserDTO dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> Register([FromBody] RegisterUserDTO dto, CancellationToken cancellationToken) // предназначен для регистрации пользователей
         {
             var result = await _authService.RegisterAsync(dto, cancellationToken);
             return Ok(result); // Можно вернуть JWT сразу, если нужно авто-вход

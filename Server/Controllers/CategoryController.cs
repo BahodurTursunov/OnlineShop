@@ -76,6 +76,7 @@ namespace Server.Controllers
         public async Task<IActionResult> DeleteCategory(int id, CancellationToken cancellationToken)
         {
             var deletedCategory = await _categoryService.Delete(id, cancellationToken);
+            
             if (deletedCategory == null)
             {
                 _logger.LogWarning($"Category with ID {id} not found when attempting to delete.");
