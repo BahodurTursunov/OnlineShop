@@ -1,22 +1,43 @@
-﻿using BaseLibrary.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+using BaseLibrary.Entities;
+using FluentValidation;
+using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
+using ValidationException = System.ComponentModel.DataAnnotations.ValidationException;
+using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace ServerLibrary.Services.Implementations
 {
     public class CategoryService(
         ISqlRepository<Category> repository,
         ILogger<CategoryService> logger,
+        IValidator<Category> validator,
         ApplicationDbContext db) : ICategoryService
     {
         private readonly ISqlRepository<Category> _repository = repository;
         private readonly ILogger<CategoryService> _logger = logger;
         private readonly ApplicationDbContext _db = db;
+        private readonly IValidator<Category> _validator = validator;
 
         public async Task<Category> Create(Category entity, CancellationToken cancellationToken)
         {
+            if (entity == null)
+            {
+                _logger.LogWarning("Category entity is null");
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            ValidationResult validationResult = await _validator.ValidateAsync(entity, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
+                _logger.LogWarning($"Category validation failed: {errors}");
+                throw new ValidationException(errors);
+            }
             var existing = _db.Categories
              .AsEnumerable() // executes SQL and compares in memory
              .FirstOrDefault(c => c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase));
@@ -25,12 +46,6 @@ namespace ServerLibrary.Services.Implementations
             {
                 _logger.LogWarning($"Category with name {entity.Name} already exists.");
                 throw new InvalidOperationException($"Category with name {entity.Name} already exists.");
-            }
-
-            if (entity == null)
-            {
-                _logger.LogWarning($"Category fields can not be empty");
-                throw new ArgumentNullException();
             }
 
             await _db.Categories.AddAsync(entity, cancellationToken);
@@ -83,10 +98,20 @@ namespace ServerLibrary.Services.Implementations
             if (entity == null)
             {
                 _logger.LogWarning("Provided category entity is null.");
-                throw new ArgumentNullException(nameof(entity), "Category entity cannot be null.");
+                throw new ArgumentNullException(nameof(entity));
             }
 
-            var existing = await _db.Categories.FindAsync(id);
+            ValidationResult validationResult = await _validator.ValidateAsync(entity, cancellationToken);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = string.Join("; ", validationResult.Errors.Select(x => x.ErrorMessage));
+                _logger.LogWarning($"Category validation failed: {errors}");
+                throw new FluentValidation.ValidationException(errors);
+            }
+            
+            var existing = await _db.Categories.FindAsync(id, cancellationToken);
+            
             if (existing == null)
             {
                 _logger.LogWarning($"Category with ID {id} was not found.");
