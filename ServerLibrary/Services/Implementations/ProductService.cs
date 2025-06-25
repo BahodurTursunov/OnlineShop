@@ -1,5 +1,4 @@
 ﻿using BaseLibrary.Entities;
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Repositories.Contracts;
@@ -10,15 +9,15 @@ namespace ServerLibrary.Services.Implementations
     public class ProductService(
         ISqlRepository<Product> repository,
         ILogger<ProductService> logger,
-        IValidator<Product> validator) : IProductService
+        IEntityValidator<Product> validator) : IProductService
     {
         private readonly ISqlRepository<Product> _repository = repository;
         private readonly ILogger<ProductService> _logger = logger;
-        private readonly IValidator<Product> _validator = validator;
+        private readonly IEntityValidator<Product> _validator = validator;
 
         public async Task<Product> Create(Product entity, CancellationToken cancellationToken)
         {
-            ValidateProduct(entity);
+            _validator.Validate(entity);
 
             Product created = await _repository.CreateAsync(entity, cancellationToken);
 
@@ -34,7 +33,7 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<Product> Update(int id, Product entity, CancellationToken cancellationToken)
         {
-            ValidateProduct(entity);
+            _validator.Validate(entity);
 
             Product? existing = await _repository.GetById(id, cancellationToken);
             if (existing is null)
@@ -104,18 +103,6 @@ namespace ServerLibrary.Services.Implementations
             }
 
             return product;
-        }
-
-        private void ValidateProduct(Product product)
-        {
-            FluentValidation.Results.ValidationResult validationResult = _validator.Validate(product);
-
-            if (!validationResult.IsValid)
-            {
-                string errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-                _logger.LogWarning("Product validation failed: {Errors}", errors);
-                throw new ValidationException(errors);
-            }
         }
     }
 }

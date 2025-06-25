@@ -36,7 +36,7 @@ namespace Server.Controllers
             return Ok(categories);
         }
 
-        [HttpGet("categories{id}")]
+        [HttpGet("categories/{id}")]
         public async Task<IActionResult> GetCategoryById(int id, CancellationToken cancellationToken)
         {
             var category = await _categoryService.GetById(id, cancellationToken);
@@ -51,7 +51,7 @@ namespace Server.Controllers
 
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("categories{id}")]
+        [HttpPut("categories/{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category category, CancellationToken cancellationToken)
         {
             if (category == null)
@@ -72,11 +72,11 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("categories{id}")]
+        [HttpDelete("categories/{id}")]
         public async Task<IActionResult> DeleteCategory(int id, CancellationToken cancellationToken)
         {
             var deletedCategory = await _categoryService.Delete(id, cancellationToken);
-            
+
             if (deletedCategory == null)
             {
                 _logger.LogWarning($"Category with ID {id} not found when attempting to delete.");

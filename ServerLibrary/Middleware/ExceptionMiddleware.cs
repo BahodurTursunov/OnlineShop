@@ -1,5 +1,4 @@
-﻿using BaseLibrary.DTOs;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Exceptions;
@@ -75,13 +74,13 @@ namespace ServerLibrary.Middleware
                     .Select(e => e.ErrorMessage)
                     .ToArray();
 
-                var result = new ApiResponse<string>(
-                    success: false,
-                    message: string.Join("; ", messages),
-                    data: null
-                );
+                //var result = new ApiResponse<string>(
+                //    success: false,
+                //    message: string.Join("; ", messages),
+                //    data: null
+                //);
 
-                var json = JsonSerializer.Serialize(result);
+                var json = JsonSerializer.Serialize(messages);
                 await context.Response.WriteAsync(json);
             }
 

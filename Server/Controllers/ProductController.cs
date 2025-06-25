@@ -35,7 +35,7 @@ namespace Server.Controllers
             return Ok(products);
         }
 
-        [HttpGet("products{id}")]
+        [HttpGet("products/{id}")]
         public async Task<IActionResult> GetProductById(int id, CancellationToken cancellationToken)
         {
             var product = await _productService.GetById(id, cancellationToken);
@@ -50,7 +50,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("products{id}")]
+        [HttpPut("products/{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, CancellationToken cancellationToken)
         {
             if (product == null)
@@ -72,7 +72,7 @@ namespace Server.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("products{id}")]
+        [HttpDelete("products/{id}")]
         public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
             var result = await _productService.Delete(id, cancellationToken);

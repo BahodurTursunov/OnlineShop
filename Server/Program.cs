@@ -170,9 +170,17 @@ namespace Server
             app.UseRouting();
             // app.UseHttpsRedirection();
 
-            app.UseAuthentication();
+            app.UseRateLimiter();
+
             app.UseAuthorization();
-            app.UseMiddleware<ApiResponseMiddleware>();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+
+            app.UseAuthentication();
+            //app.UseMiddleware<ApiResponseMiddleware>();
 
             app.MapControllers();
             app.Run();

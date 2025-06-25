@@ -1,6 +1,7 @@
 using BaseLibrary.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
@@ -12,6 +13,7 @@ namespace Server.Controllers
         private readonly IUserService _userService = userService;
         private readonly ILogger<UserController> _logger = logger;
 
+        [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
@@ -37,7 +39,8 @@ namespace Server.Controllers
             return Ok(users);
         }
 
-        [HttpGet("users{id}")]
+        [EnableRateLimiting]
+        [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
             var user = await _userService.GetById(id, cancellationToken);
@@ -50,8 +53,9 @@ namespace Server.Controllers
             return Ok(user);
         }
 
+        [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
-        [HttpPut("users{id}")]
+        [HttpPut("users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user, CancellationToken cancellationToken)
         {
             if (user == null)
@@ -72,8 +76,9 @@ namespace Server.Controllers
             return Ok(updatedUser);
         }
 
+        [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
-        [HttpDelete("users{id}")]
+        [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
             var result = await _userService.Delete(id, cancellationToken);
