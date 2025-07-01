@@ -62,29 +62,56 @@ namespace ServerLibrary.DI
                 options.InstanceName = "OnlineShopCache"; // Optional prefix for cache keys
             });
 
-            services.AddRateLimiter(opt =>
-            {
-                opt.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpcontext =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    partitionKey: httpcontext.User.Identity?.Name ?? httpcontext.Request.Headers.Host.ToString(),
-                    factory: partition => new FixedWindowRateLimiterOptions
-                    {
-                        AutoReplenishment = true,
-                        PermitLimit = 30,
-                        QueueLimit = 30,
-                        Window = TimeSpan.FromMinutes(1)
-                    }));
-            });
+            //services.AddRateLimiter(options =>
+            //{
+            //    options.OnRejected = async (context, cancellationToken) =>
+            //    {
+            //        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            //        context.HttpContext.Response.Headers["Retry-After"] = "30";
+            //        await context.HttpContext.Response.WriteAsync("Rate limit exceeded. Please try again later.", cancellationToken);
+            //    };
+
+            //    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            //    {
+            //        var key = httpContext.User.Identity?.IsAuthenticated == true
+            //            ? $"user:{httpContext.User.Identity?.Name}"
+            //            : $"ip:{httpContext.Connection.RemoteIpAddress}";
+
+            //        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+            //        {
+            //            PermitLimit = 3,
+            //            QueueLimit = 30,
+            //            Window = TimeSpan.FromSeconds(10),
+            //            AutoReplenishment = true
+            //        });
+            //    });
+            //});
+
 
             services.AddRateLimiter(opt2 =>
             {
                 opt2.AddFixedWindowLimiter("fixed", opt2 =>
                 {
                     opt2.PermitLimit = 5;
-                    opt2.Window = TimeSpan.FromSeconds(20);
+                    opt2.Window = TimeSpan.FromSeconds(30);
                     opt2.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt2.QueueLimit = 5;
                 });
+                opt2.OnRejected = async (context, cancellationToken) =>
+                {
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    context.HttpContext.Response.Headers["Retry-After"] = "30";
+                    await context.HttpContext.Response.WriteAsync("Rate limit exceeded. Please try again later.", cancellationToken);
+
+                    var errorResponse = new
+                    {
+                        success = false,
+                        message = "Rate limit exceeded. Please try again later.",
+                        statusCode = 429
+                    };
+                    var message = System.Text.Json.JsonSerializer.Serialize(errorResponse);
+                    await context.HttpContext.Response.WriteAsync(message, cancellationToken);
+                };
             });
 
 

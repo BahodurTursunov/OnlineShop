@@ -4,6 +4,7 @@ using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
 {
+
     [ApiController]
     [Route("v1/api/carts")]
     public class CartController(ICartService cartService, ILogger<CartController> logger) : ControllerBase

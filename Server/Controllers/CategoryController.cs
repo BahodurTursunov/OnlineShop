@@ -1,6 +1,7 @@
 ﻿using BaseLibrary.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
@@ -12,6 +13,12 @@ namespace Server.Controllers
         private readonly ICategoryService _categoryService = categoryService;
         private readonly ILogger<CategoryController> _logger = logger;
 
+        /// <summary>
+        /// Create category
+        /// </summary>
+        /// <param name="category"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpPost("categories")]
         public async Task<IActionResult> CreateCategory([FromBody] Category category, CancellationToken cancellationToken)
@@ -28,6 +35,12 @@ namespace Server.Controllers
             return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.Id }, createdCategory);
         }
 
+        /// <summary>
+        /// Get all category
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [EnableRateLimiting("fixed")]
         [HttpGet("categories")]
         public IActionResult GetAllCategories(CancellationToken cancellationToken)
         {
@@ -36,6 +49,13 @@ namespace Server.Controllers
             return Ok(categories);
         }
 
+        /// <summary>
+        /// Get category by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [EnableRateLimiting("fixed")]
         [HttpGet("categories/{id}")]
         public async Task<IActionResult> GetCategoryById(int id, CancellationToken cancellationToken)
         {
@@ -49,7 +69,13 @@ namespace Server.Controllers
             return Ok(category);
         }
 
-
+        /// <summary>
+        /// Update category by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="category"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpPut("categories/{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category category, CancellationToken cancellationToken)
@@ -71,6 +97,12 @@ namespace Server.Controllers
             return Ok(updatedCategory);
         }
 
+        /// <summary>
+        /// Delete category by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpDelete("categories/{id}")]
         public async Task<IActionResult> DeleteCategory(int id, CancellationToken cancellationToken)

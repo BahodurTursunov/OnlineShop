@@ -10,6 +10,7 @@ using ServerLibrary.DI;
 using ServerLibrary.Helpers;
 using ServerLibrary.Middleware;
 using ServerLibrary.SignalR;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 #endregion
@@ -82,6 +83,8 @@ namespace Server
             builder.Services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "Online Shop API", Version = "v1" });
+                var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
 
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -129,6 +132,8 @@ namespace Server
                         ClockSkew = TimeSpan.Zero
                     };
                 });
+
+
             #endregion
 
             var app = builder.Build();
@@ -141,6 +146,7 @@ namespace Server
                     .AllowAnyHeader();
             });
             #endregion
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
@@ -168,6 +174,7 @@ namespace Server
             });
 
             app.UseRouting();
+
             // app.UseHttpsRedirection();
 
             app.UseRateLimiter();
@@ -180,9 +187,11 @@ namespace Server
             });
 
             app.UseAuthentication();
+
+
             //app.UseMiddleware<ApiResponseMiddleware>();
 
-            app.MapControllers();
+            app.MapControllers().RequireRateLimiting("fixed");
             app.Run();
         }
     }

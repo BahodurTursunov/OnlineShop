@@ -1,6 +1,7 @@
 ﻿using BaseLibrary.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
@@ -12,6 +13,12 @@ namespace Server.Controllers
         private readonly IProductService _productService = productService;
         private readonly ILogger<ProductController> _logger = logger;
 
+        /// <summary>
+        /// Create product
+        /// </summary>
+        /// <param name="product"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpPost("products")]
         public async Task<IActionResult> CreateProduct([FromBody] Product product, CancellationToken cancellationToken)
@@ -27,6 +34,16 @@ namespace Server.Controllers
             return Ok(new { message = $"Product {product.Name} successfully created" });
         }
 
+        /// <summary>
+        /// Get all products
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <response code = "429">Too many requests</response>
+
+        ///[Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        [EnableRateLimiting("fixed")]
         [HttpGet("products")]
         public ActionResult<IEnumerable<Product>> GetAllProducts(CancellationToken cancellationToken)
         {
@@ -35,6 +52,12 @@ namespace Server.Controllers
             return Ok(products);
         }
 
+        /// <summary>
+        /// Get product with id 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [HttpGet("products/{id}")]
         public async Task<IActionResult> GetProductById(int id, CancellationToken cancellationToken)
         {
@@ -49,6 +72,14 @@ namespace Server.Controllers
             return Ok(product);
         }
 
+
+        /// <summary>
+        /// Update product by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="product"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpPut("products/{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, CancellationToken cancellationToken)
@@ -71,6 +102,13 @@ namespace Server.Controllers
             return Ok(updatedProduct);
         }
 
+
+        /// <summary>
+        /// Delete product by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpDelete("products/{id}")]
         public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)

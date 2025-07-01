@@ -13,8 +13,16 @@ namespace Server.Controllers
         private readonly IUserService _userService = userService;
         private readonly ILogger<UserController> _logger = logger;
 
+        /// <summary>
+        /// Create Admin
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
         {
@@ -30,6 +38,15 @@ namespace Server.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
         }
 
+        /// <summary>
+        /// Get all users
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [EnableRateLimiting("fixed")]
+        //[Authorize(Roles = "Admin")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpGet("users")]
         public ActionResult<IEnumerable<User>> GetAllUsers(CancellationToken cancellationToken)
         {
@@ -39,7 +56,13 @@ namespace Server.Controllers
             return Ok(users);
         }
 
-        [EnableRateLimiting]
+        /// <summary>
+        /// Get User by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [EnableRateLimiting("fixed")]
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
@@ -53,6 +76,13 @@ namespace Server.Controllers
             return Ok(user);
         }
 
+        /// <summary>
+        /// Update User by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="user"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
         [HttpPut("users/{id}")]
@@ -76,6 +106,13 @@ namespace Server.Controllers
             return Ok(updatedUser);
         }
 
+
+        /// <summary>
+        /// Delete user by id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
         [HttpDelete("users/{id}")]
