@@ -24,7 +24,7 @@ namespace Server.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken) // предназначен для создания Админов системы
         {
             if (user == null)
             {
