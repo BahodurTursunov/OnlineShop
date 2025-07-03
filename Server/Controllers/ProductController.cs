@@ -1,7 +1,6 @@
 ﻿using BaseLibrary.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
@@ -42,8 +41,8 @@ namespace Server.Controllers
         /// <response code = "429">Too many requests</response>
 
         ///[Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-        [EnableRateLimiting("fixed")]
+        //[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        //[EnableRateLimiting("fixed")]
         [HttpGet("products")]
         public ActionResult<IEnumerable<Product>> GetAllProducts(CancellationToken cancellationToken)
         {

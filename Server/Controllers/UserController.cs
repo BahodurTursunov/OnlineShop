@@ -21,7 +21,6 @@ namespace Server.Controllers
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken) // предназначен для создания Админов системы
@@ -44,8 +43,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
-        //[Authorize(Roles = "Admin")]
-        [AllowAnonymous]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpGet("users")]
         public ActionResult<IEnumerable<User>> GetAllUsers(CancellationToken cancellationToken)
@@ -63,6 +61,8 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
@@ -84,6 +84,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [Authorize(Roles = "Admin")]
         [HttpPut("users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user, CancellationToken cancellationToken)
@@ -114,6 +115,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [Authorize(Roles = "Admin")]
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)

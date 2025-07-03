@@ -41,6 +41,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpGet("categories")]
         public IActionResult GetAllCategories(CancellationToken cancellationToken)
         {
@@ -56,6 +57,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpGet("categories/{id}")]
         public async Task<IActionResult> GetCategoryById(int id, CancellationToken cancellationToken)
         {
@@ -77,6 +79,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpPut("categories/{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category category, CancellationToken cancellationToken)
         {
@@ -104,6 +107,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpDelete("categories/{id}")]
         public async Task<IActionResult> DeleteCategory(int id, CancellationToken cancellationToken)
         {
