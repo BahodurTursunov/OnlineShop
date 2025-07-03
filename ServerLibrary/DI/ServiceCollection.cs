@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using ServerLibrary.Authentication.Claim;
+using ServerLibrary.Middleware;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services;
@@ -44,6 +45,20 @@ namespace ServerLibrary.DI
             services.AddScoped<IValidator<Order>, OrderValidation>();
             services.AddScoped<IValidator<OrderItem>, OrderItemValidation>();
             services.AddScoped(typeof(IEntityValidator<>), typeof(EntityValidator<>));
+            services.AddTransient<ValidationMiddleware>();
+
+
+
+
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy("AllowFrontend", builder =>
+                {
+                    builder.WithOrigins("https://")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                });
+            });
 
             services.AddSignalR(hubOptions =>
             {

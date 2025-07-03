@@ -1,19 +1,24 @@
 ﻿using BaseLibrary.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
+using System.Text.Json;
 
 namespace ServerLibrary.Services.Implementations
 {
     public class ProductService(
         ISqlRepository<Product> repository,
         ILogger<ProductService> logger,
-        IEntityValidator<Product> validator) : IProductService
+        IEntityValidator<Product> validator,
+        IDistributedCache cache) : IProductService
+
     {
         private readonly ISqlRepository<Product> _repository = repository;
         private readonly ILogger<ProductService> _logger = logger;
         private readonly IEntityValidator<Product> _validator = validator;
+        private readonly IDistributedCache _cache = cache;
 
         public async Task<Product> Create(Product entity, CancellationToken cancellationToken)
         {
@@ -76,13 +81,32 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<Product> GetById(int id, CancellationToken cancellationToken)
         {
-            Product? product = await _repository.GetById(id, cancellationToken);
+            string cacheKey = $"product: {id}";
+            var cachedProduct = await _cache.GetStringAsync(cacheKey, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(cachedProduct))
+            {
+                _logger.LogInformation($"Returned product Id {id} from cache");
+                return JsonSerializer.Deserialize<Product>(cachedProduct);
+            }
+
+            var product = await _repository.GetById(id, cancellationToken);
             if (product is null)
             {
                 _logger.LogWarning("Product with ID {Id} not found", id);
                 throw new KeyNotFoundException($"Product with ID {id} not found.");
             }
 
+            await _cache.SetStringAsync(
+                cacheKey,
+                JsonSerializer.Serialize(product),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+                    SlidingExpiration = TimeSpan.FromMinutes(2)
+                },
+                cancellationToken);
+
+            await _cac
             return product;
         }
 
