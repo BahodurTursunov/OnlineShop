@@ -53,15 +53,17 @@ namespace Server
             #endregion
 
             #region Redis Cache
-            /*   builder.Services.AddStackExchangeRedisCache(options =>
-               {
-                   options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-                   options.InstanceName = "OnlineShop_";
-               });*/
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+                options.InstanceName = "OnlineShopCache_";
+            });
             #endregion
 
             #region Registration Services
             builder.Services.AddMyServices();
+            /* builder.Services.AddValidatorsFromAssemblyContaining<ProductValidation>();
+             builder.Services.AddFluentValidationAutoValidation(); // автоматическая интеграция с ModelState*/
             #endregion
 
             #region AddControllers 
@@ -69,6 +71,7 @@ namespace Server
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
+                    //options.Filters.Add<ValidationFilters>();
                     options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
                 });
 
@@ -138,13 +141,15 @@ namespace Server
 
             var app = builder.Build();
 
-            #region CORS
-            app.UseCors(options =>
+            // предназначен для отклонения подозрительных скриптов
+            app.Use(async (context, next) =>
             {
-                options.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
+                context.Response.Headers.Add("Content-Secutiry-Policy", "default-src 'self'");
+                await next();
             });
+
+            #region CORS
+            app.UseCors("AllowFrontend");
             #endregion
 
             app.UseDefaultFiles();
@@ -179,17 +184,18 @@ namespace Server
 
             app.UseRateLimiter();
 
+            app.UseAuthentication();
+            app.UseMiddleware<ValidationMiddleware>();
             app.UseAuthorization();
+
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
-            app.UseAuthentication();
 
 
-            //app.UseMiddleware<ApiResponseMiddleware>();
 
             app.MapControllers().RequireRateLimiting("fixed");
             app.Run();
