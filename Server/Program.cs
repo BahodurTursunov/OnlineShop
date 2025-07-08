@@ -185,6 +185,7 @@ namespace Server
             app.UseRateLimiter();
 
             app.UseAuthentication();
+            app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<ValidationMiddleware>();
             app.UseAuthorization();
 

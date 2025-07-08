@@ -2,14 +2,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.Services.Contracts;
+using ServerLibrary.Services.Contracts.Cache;
 
 namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api")]
-    public class ProductController(IProductService productService, ILogger<ProductController> logger) : ControllerBase
+    public class ProductController(IProductService productService, ILogger<ProductController> logger, IRedisCacheService cacheService) : ControllerBase
     {
         private readonly IProductService _productService = productService;
+        private readonly IRedisCacheService _cacheService = cacheService;
         private readonly ILogger<ProductController> _logger = logger;
 
         /// <summary>
@@ -46,7 +48,7 @@ namespace Server.Controllers
         [HttpGet("products")]
         public ActionResult<IEnumerable<Product>> GetAllProducts(CancellationToken cancellationToken)
         {
-            var products = _productService.GetAll(cancellationToken);
+            var products = _productService.GetAllCached(cancellationToken);
             _logger.LogInformation("Request to retrieve all products.");
             return Ok(products);
         }

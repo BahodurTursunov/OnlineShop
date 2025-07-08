@@ -6,14 +6,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using ServerLibrary.Authentication.Claim;
-using ServerLibrary.Middleware;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Auth;
+using ServerLibrary.Services.Contracts.Cache;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Implementations.Auth;
+using ServerLibrary.Services.Implementations.Cache;
 using ServerLibrary.SignalR;
 using ServerLibrary.Validation;
 using System.Threading.RateLimiting;
@@ -34,6 +35,8 @@ namespace ServerLibrary.DI
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
 
+            services.AddScoped<IRedisCacheService, RedisCacheService>();
+
             services.AddScoped<ProductValidation>();
             services.AddScoped<CategoryValidation>();
             services.AddScoped<OrderValidation>();
@@ -45,7 +48,6 @@ namespace ServerLibrary.DI
             services.AddScoped<IValidator<Order>, OrderValidation>();
             services.AddScoped<IValidator<OrderItem>, OrderItemValidation>();
             services.AddScoped(typeof(IEntityValidator<>), typeof(EntityValidator<>));
-            services.AddTransient<ValidationMiddleware>();
 
 
 
@@ -128,7 +130,6 @@ namespace ServerLibrary.DI
                     await context.HttpContext.Response.WriteAsync(message, cancellationToken);
                 };
             });
-
 
             services.AddMyClaims();
             services.AddAutoMapper(typeof(UserProfile));
