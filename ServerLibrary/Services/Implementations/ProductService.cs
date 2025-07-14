@@ -76,7 +76,7 @@ namespace ServerLibrary.Services.Implementations
                 throw new KeyNotFoundException($"Product with ID {id} not found.");
             }
 
-            await _cache.SetAsync(cacheKey, product, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(2), cancellationToken);
+            await _cache.SetAsync(cacheKey, product, TimeSpan.FromMinutes(2), cancellationToken);
             return product;
         }
 

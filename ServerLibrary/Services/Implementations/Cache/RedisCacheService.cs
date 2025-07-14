@@ -13,46 +13,18 @@ namespace ServerLibrary.Services.Implementations.Cache
 
         public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
         {
-            var cached = await _cache.GetStringAsync(key, cancellationToken);
-
-            if (string.IsNullOrWhiteSpace(cached))
-            {
-                return default;
-            }
-
-            try
-            {
-                return JsonSerializer.Deserialize<T>(cached);
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "Failed to deserialize cache entry for key: {Key}", key);
-                return default;
-            }
+            var json = await _cache.GetStringAsync(key, cancellationToken);
+            return json is null ? default : JsonSerializer.Deserialize<T>(json);
         }
 
-        public async Task SetAsync<T>(
-            string key,
-            T value,
-            TimeSpan? absoluteExpireTime = null,
-            TimeSpan? slidingExpireTime = null,
-            CancellationToken cancellationToken = default)
+        public async Task SetAsync<T>(string key, T value, TimeSpan? lifeTime, CancellationToken cancellationToken = default)
         {
-            var options = new DistributedCacheEntryOptions();
-
-            if (absoluteExpireTime.HasValue)
-            {
-                options.AbsoluteExpirationRelativeToNow = absoluteExpireTime;
-            }
-
-            if (slidingExpireTime.HasValue)
-            {
-                options.SlidingExpiration = slidingExpireTime;
-            }
-
             var json = JsonSerializer.Serialize(value);
 
-            await _cache.SetStringAsync(key, json, options, cancellationToken);
+            await _cache.SetStringAsync(key, json, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = lifeTime
+            }, cancellationToken);
         }
 
         public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
