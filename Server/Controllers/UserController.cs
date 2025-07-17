@@ -73,6 +73,7 @@ namespace Server.Controllers
                 _logger.LogWarning($"User with ID {id} not found.");
                 return NotFound(new { message = "User not found" });
             }
+
             return Ok(user);
         }
 

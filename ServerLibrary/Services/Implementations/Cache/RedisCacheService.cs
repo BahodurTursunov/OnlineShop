@@ -31,5 +31,10 @@ namespace ServerLibrary.Services.Implementations.Cache
         {
             await _cache.RemoveAsync(key, cancellationToken);
         }
+
+        Task<T?> IRedisCacheService.SetAsync<T>(string key, T value, TimeSpan? lifeTime, CancellationToken cancellationToken) where T : default
+        {
+            throw new NotImplementedException();
+        }
     }
 }

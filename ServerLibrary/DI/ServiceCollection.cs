@@ -49,9 +49,6 @@ namespace ServerLibrary.DI
             services.AddScoped<IValidator<OrderItem>, OrderItemValidation>();
             services.AddScoped(typeof(IEntityValidator<>), typeof(EntityValidator<>));
 
-
-
-
             services.AddCors(opt =>
             {
                 opt.AddPolicy("AllowFrontend", builder =>
@@ -73,11 +70,7 @@ namespace ServerLibrary.DI
                 options.KeepAliveInterval = TimeSpan.FromMinutes(5);
             });
 
-            services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = "localhost"; // Adjust as needed for your Redis server
-                options.InstanceName = "OnlineShopCache"; // Optional prefix for cache keys
-            });
+
 
             //services.AddRateLimiter(options =>
             //{

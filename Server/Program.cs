@@ -43,20 +43,18 @@ namespace Server
 
             #endregion
 
-            #region DB Connect
+            #region DB Connect | Redis
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DBConnection"))
                 .LogTo(Console.Write, LogLevel.Information)
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });
-            #endregion
 
-            #region Redis Cache
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-                options.InstanceName = "OnlineShopCache_";
+                options.InstanceName = "local";
             });
             #endregion
 
@@ -167,6 +165,7 @@ namespace Server
 
             #region Middleware
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<TooManyRequestMiddleware>();
             #endregion
 
 
