@@ -1,20 +1,20 @@
 ﻿using BaseLibrary.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Exceptions;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
-using System.Text.Json;
+using ServerLibrary.Services.Contracts.Cache;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, ApplicationDbContext db, IDistributedCache _cache) : IUserService
+    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, ApplicationDbContext db, IRedisCacheService<User> cache) : IUserService
     {
         private readonly ISqlRepository<User> _repository = repository;
         private readonly ILogger<UserService> _logger = logger;
         private readonly ApplicationDbContext _db = db;
+        private readonly IRedisCacheService<User> _cache = cache;
 
         #region CRUD Operations
         public async Task<User> Create(User user, CancellationToken cancellationToken)
@@ -75,18 +75,13 @@ namespace ServerLibrary.Services.Implementations
             _logger.LogInformation($"Attempting to retrieve user with ID {id} from the database.");
 
             var cacheKey = $"user:{id}";
-            User user = null;
 
-            var userJson = await _cache.GetStringAsync(cacheKey, cancellationToken);
+            var user = await _cache.GetAsync(cacheKey, cancellationToken);
 
-            if (!string.IsNullOrEmpty(userJson))
+            if (user != null)
             {
-                user = JsonSerializer.Deserialize<User>(userJson);
                 _logger.LogInformation($"User with {id} has been retrieved from the cache.");
-            }
-            else
-            {
-                _logger.LogInformation("User not found in cache.");
+                return user;
             }
 
             if (user == null)
@@ -94,10 +89,7 @@ namespace ServerLibrary.Services.Implementations
                 user = await _repository.GetById(id, cancellationToken);
                 if (user != null)
                 {
-                    _cache.SetString(cacheKey, JsonSerializer.Serialize<User>(user),
-                        new DistributedCacheEntryOptions()
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5)) // через минуту элемент будет удален
-                        .SetSlidingExpiration(TimeSpan.FromMinutes(5)));   // если в течение минуты к объекту не будет обращения, то он будет удален
+                    await _cache.SetAsync(cacheKey, user, absoluteExpiration: TimeSpan.FromMinutes(10), slidingExpiration: TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
                 }
                 _logger.LogInformation($"User with {id} has been cached.");
             }
@@ -155,7 +147,5 @@ namespace ServerLibrary.Services.Implementations
             return existingUser;
         }
         #endregion
-
-
     }
 }

@@ -11,7 +11,6 @@ using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Auth;
-using ServerLibrary.Services.Contracts.Cache;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Implementations.Auth;
 using ServerLibrary.Services.Implementations.Cache;
