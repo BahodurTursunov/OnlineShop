@@ -11,9 +11,12 @@ using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Services;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Auth;
+using ServerLibrary.Services.Contracts.Cache;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Implementations.Auth;
 using ServerLibrary.Services.Implementations.Cache;
+
+//using ServerLibrary.Services.Implementations.Cache;
 using ServerLibrary.SignalR;
 using ServerLibrary.Validation;
 using System.Threading.RateLimiting;
@@ -34,7 +37,9 @@ namespace ServerLibrary.DI
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
 
-            services.AddScoped<IRedisCacheService, RedisCacheService>();
+            services.AddScoped<IRedisCacheService<Product>, RedisCacheService<Product>>();
+            services.AddScoped(typeof(IRedisCacheService<>), typeof(RedisCacheService<>));
+
 
             services.AddScoped<ProductValidation>();
             services.AddScoped<CategoryValidation>();

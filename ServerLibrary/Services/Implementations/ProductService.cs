@@ -11,13 +11,16 @@ namespace ServerLibrary.Services.Implementations
         ISqlRepository<Product> repository,
         ILogger<ProductService> logger,
         IEntityValidator<Product> validator,
-        IRedisCacheService cache) : IProductService
+        IRedisCacheService<List<Product>> productListCache,
+        IRedisCacheService<Product> cache) : IProductService
 
     {
         private readonly ISqlRepository<Product> _repository = repository;
         private readonly ILogger<ProductService> _logger = logger;
         private readonly IEntityValidator<Product> _validator = validator;
-        private readonly IRedisCacheService _cache = cache;
+        private readonly IRedisCacheService<Product> _cache = cache;
+        private readonly IRedisCacheService<List<Product>> _productListCache = productListCache;
+
 
         public async Task<Product> Create(Product entity, CancellationToken cancellationToken)
         {
@@ -40,11 +43,11 @@ namespace ServerLibrary.Services.Implementations
             return _repository.GetAll(cancellationToken);
         }
 
-        public async Task<IEnumerable<Product>> GetAllCached(CancellationToken cancellationToken = default)
+        public async Task<List<Product>> GetAllCached(CancellationToken cancellationToken = default)
         {
             const string cacheKey = "products:all";
 
-            var cached = await _cache.GetAsync<List<Product>>(cacheKey, cancellationToken);
+            var cached = await _productListCache.GetAsync(cacheKey, cancellationToken);
             if (cached is not null)
             {
                 _logger.LogInformation("Returned all products from cache.");
@@ -53,7 +56,7 @@ namespace ServerLibrary.Services.Implementations
 
             var products = await _repository.GetAll(cancellationToken).ToListAsync(cancellationToken);
 
-            await _cache.SetAsync(cacheKey, products, TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
+            await _productListCache.SetAsync(cacheKey, products, TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
 
             return products;
         }
@@ -61,7 +64,7 @@ namespace ServerLibrary.Services.Implementations
         public async Task<Product> GetById(int id, CancellationToken cancellationToken)
         {
             string cacheKey = $"product:{id}";
-            var cached = await _cache.GetAsync<Product>(cacheKey, cancellationToken);
+            var cached = await _cache.GetAsync(cacheKey, cancellationToken);
 
             if (cached is not null)
             {
@@ -76,7 +79,7 @@ namespace ServerLibrary.Services.Implementations
                 throw new KeyNotFoundException($"Product with ID {id} not found.");
             }
 
-            await _cache.SetAsync(cacheKey, product, TimeSpan.FromMinutes(2), cancellationToken);
+            await _cache.SetAsync(cacheKey, product, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(5), cancellationToken);
             return product;
         }
 

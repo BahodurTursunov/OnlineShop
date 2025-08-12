@@ -8,10 +8,10 @@ namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api")]
-    public class ProductController(IProductService productService, ILogger<ProductController> logger, IRedisCacheService cacheService) : ControllerBase
+    public class ProductController(IProductService productService, ILogger<ProductController> logger, IRedisCacheService<Product> cacheService) : ControllerBase
     {
         private readonly IProductService _productService = productService;
-        private readonly IRedisCacheService _cacheService = cacheService;
+        private readonly IRedisCacheService<Product> _cacheService = cacheService;
         private readonly ILogger<ProductController> _logger = logger;
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿// Path: ServerLibrary/Services/Implementations/CacheService.cs
+﻿// ServerLibrary/Services/Implementations/Cache/RedisCacheService.cs
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Services.Contracts.Cache;
@@ -6,34 +6,45 @@ using System.Text.Json;
 
 namespace ServerLibrary.Services.Implementations.Cache
 {
-    public class RedisCacheService(IDistributedCache cache, ILogger<RedisCacheService> logger) : IRedisCacheService<T>
+    public class RedisCacheService<T> : IRedisCacheService<T> where T : class
     {
-        private readonly IDistributedCache _cache = cache;
-        private readonly ILogger<RedisCacheService> _logger = logger;
+        private readonly IDistributedCache _cache;
+        private readonly ILogger<RedisCacheService<T>> _logger;
+        private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
-        public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+        public RedisCacheService(IDistributedCache cache, ILogger<RedisCacheService<T>> logger)
+        {
+            _cache = cache;
+            _logger = logger;
+        }
+
+        public async Task<T?> GetAsync(string key, CancellationToken cancellationToken = default)
         {
             try
             {
                 var json = await _cache.GetStringAsync(key, cancellationToken);
-                if (string.IsNullOrEmpty(json))
+                if (string.IsNullOrWhiteSpace(json))
                 {
-                    return default;
+                    return null;
                 }
-                return json is null ? default : JsonSerializer.Deserialize<T>(json);
+
+                return JsonSerializer.Deserialize<T>(json, _jsonOptions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while getting cache for key '{key}");
-                return default;
+                _logger.LogError(ex, "Cache GET error for key '{Key}'", key);
+                return null;
             }
         }
 
-        public async Task<T> SetAsync(string key, T value, TimeSpan? absoluteExpiration, TimeSpan? slidingExpiration = null, CancellationToken cancellationToken = default)
+        public async Task<T> SetAsync(string key, T value, TimeSpan? absoluteExpiration = null, TimeSpan? slidingExpiration = null, CancellationToken cancellationToken = default)
         {
             try
             {
-                var json = JsonSerializer.Serialize(value);
+                var json = JsonSerializer.Serialize(value, _jsonOptions);
                 var options = new DistributedCacheEntryOptions();
 
                 if (absoluteExpiration.HasValue)
@@ -47,12 +58,13 @@ namespace ServerLibrary.Services.Implementations.Cache
                 }
 
                 await _cache.SetStringAsync(key, json, options, cancellationToken);
+                return value;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while setting cache for key '{key}'");
+                _logger.LogError(ex, "Cache SET error for key '{Key}'", key);
+                return default;
             }
-
         }
 
         public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
@@ -60,14 +72,11 @@ namespace ServerLibrary.Services.Implementations.Cache
             try
             {
                 await _cache.RemoveAsync(key, cancellationToken);
-
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while removing cache for key '{key}'");
+                _logger.LogError(ex, "Cache REMOVE error for key '{Key}'", key);
             }
         }
-
-
     }
 }
