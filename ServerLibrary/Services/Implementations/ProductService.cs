@@ -47,7 +47,7 @@ namespace ServerLibrary.Services.Implementations
         {
             const string cacheKey = "products:all";
 
-            var cached = await _productListCache.GetAsync(cacheKey, cancellationToken);
+            var cached = await _cache.GetAsync<Product>(cacheKey, cancellationToken);
             if (cached is not null)
             {
                 _logger.LogInformation("Returned all products from cache.");

@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using ServerLibrary.Authentication.Claim;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Repositories.Implementations;
-using ServerLibrary.Services;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Auth;
 using ServerLibrary.Services.Contracts.Cache;

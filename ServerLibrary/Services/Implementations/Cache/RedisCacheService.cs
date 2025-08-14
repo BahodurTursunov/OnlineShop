@@ -21,14 +21,14 @@ namespace ServerLibrary.Services.Implementations.Cache
             _logger = logger;
         }
 
-        public async Task<T?> GetAsync(string key, CancellationToken cancellationToken = default)
+        public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
         {
             try
             {
                 var json = await _cache.GetStringAsync(key, cancellationToken);
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    return null;
+                    return default;
                 }
 
                 return JsonSerializer.Deserialize<T>(json, _jsonOptions);
@@ -36,7 +36,7 @@ namespace ServerLibrary.Services.Implementations.Cache
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Cache GET error for key '{Key}'", key);
-                return null;
+                return default;
             }
         }
 

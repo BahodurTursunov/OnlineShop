@@ -4,6 +4,6 @@
     {
         public int UserId { get; set; }
         public User? User { get; set; }
-        public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+        public List<CartItem> CartItems { get; set; } = new List<CartItem>();
     }
 }

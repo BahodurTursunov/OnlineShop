@@ -46,9 +46,9 @@ namespace Server.Controllers
         //[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         //[EnableRateLimiting("fixed")]
         [HttpGet("products")]
-        public ActionResult<IEnumerable<Product>> GetAllProducts(CancellationToken cancellationToken)
+        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts(CancellationToken cancellationToken)
         {
-            var products = _productService.GetAllCached(cancellationToken);
+            var products = await _productService.GetAllCached(cancellationToken);
             _logger.LogInformation("Request to retrieve all products.");
             return Ok(products);
         }

@@ -1,20 +1,28 @@
 ﻿using BaseLibrary.Entities;
+using Microsoft.Extensions.Logging;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
+using ServerLibrary.Services.Contracts.Cache;
 
-namespace ServerLibrary.Services
+namespace ServerLibrary.Services.Implementations
 {
-    public class CartService : ICartService
+    public class CartService(ICartRepository repository, IRedisCacheService<CartService> cartCache, ILogger<CartService> logger) : ICartService
     {
-        private readonly ICartRepository _repository;
-
-        public CartService(ICartRepository repository)
-        {
-            _repository = repository;
-        }
+        private readonly ICartRepository _repository = repository;
+        private readonly IRedisCacheService<CartService> _cartCache = cartCache;
+        private readonly ILogger<CartService> _logger = logger;
 
         public async Task<Cart> GetCartByUserIdAsync(int userId, CancellationToken cancellationToken)
         {
+            string cachedKey = $"cart:user:{userId}";
+
+            var cachedCart = await _cartCache.GetAsync<Cart>(cachedKey, cancellationToken);
+            if (cachedCart != null)
+            {
+                _logger.LogInformation($"Retrieved cart from cache for user {userId}");
+                return cachedCart;
+            }
+
             return await _repository.GetByUserIdAsync(userId, includeItems: true, cancellationToken)
                    ?? throw new InvalidOperationException("Cart not found");
         }
@@ -94,10 +102,16 @@ namespace ServerLibrary.Services
         public async Task<bool> RemoveItemFromCartAsync(int userId, int productId, CancellationToken cancellationToken)
         {
             var cart = await _repository.GetByUserIdAsync(userId, includeItems: true, cancellationToken);
-            if (cart == null) return false;
+            if (cart == null)
+            {
+                return false;
+            }
 
             var item = cart.CartItems.FirstOrDefault(i => i.ProductId == productId);
-            if (item == null) return false;
+            if (item == null)
+            {
+                return false;
+            }
 
             cart.CartItems.Remove(item);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -107,7 +121,10 @@ namespace ServerLibrary.Services
         public async Task<bool> ClearCartAsync(int userId, CancellationToken cancellationToken)
         {
             var cart = await _repository.GetByUserIdAsync(userId, includeItems: true, cancellationToken);
-            if (cart == null || cart.CartItems.Count == 0) return false;
+            if (cart == null || cart.CartItems.Count == 0)
+            {
+                return false;
+            }
 
             cart.CartItems.Clear();
             await _repository.SaveChangesAsync(cancellationToken);
