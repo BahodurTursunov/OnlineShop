@@ -77,7 +77,7 @@ namespace ServerLibrary.Services.Implementations
 
             var cacheKey = $"user:{id}";
 
-            var user = await _cache.GetAsync(cacheKey, cancellationToken);
+            var user = await _cache.GetAsync<User>(cacheKey, cancellationToken);
 
             if (user != null)
             {

@@ -10,7 +10,9 @@ namespace ServerLibrary.Validation
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Название продукта не может быть пустым.")
                 .MaximumLength(100).WithMessage("Название продукта не должно превышать 100 символов.")
-                .NotEqual("string").WithMessage("Название не должно быть 'string' по умолчанию.");
+                .NotEqual("string").WithMessage("Название не должно быть 'string' по умолчанию.")
+                .Matches(@"^[a-zA-Zа-яА-ЯёЁ0-9\s-]+$").WithMessage("Название продукта может содержать только буквы, цифры, пробелы и дефисы.");
+
 
             RuleFor(x => x.Description)
                 .MaximumLength(500).WithMessage("Описание не должно превышать 500 символов.")

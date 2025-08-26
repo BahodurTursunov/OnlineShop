@@ -1,7 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using BaseLibrary.Entities;
+﻿using BaseLibrary.Entities;
 using FluentValidation;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Data;
 using ServerLibrary.Repositories.Contracts;
@@ -109,9 +107,9 @@ namespace ServerLibrary.Services.Implementations
                 _logger.LogWarning($"Category validation failed: {errors}");
                 throw new FluentValidation.ValidationException(errors);
             }
-            
+
             var existing = await _db.Categories.FindAsync(id, cancellationToken);
-            
+
             if (existing == null)
             {
                 _logger.LogWarning($"Category with ID {id} was not found.");

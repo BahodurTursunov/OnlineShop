@@ -47,24 +47,45 @@ namespace ServerLibrary.Services.Implementations
         {
             const string cacheKey = "products:all";
 
-            var cached = await _cache.GetAsync<Product>(cacheKey, cancellationToken);
-            if (cached is not null)
+            try
             {
-                _logger.LogInformation("Returned all products from cache.");
-                return cached;
+                var cached = await _cache.GetAsync<List<Product>>(cacheKey, cancellationToken);
+                if (cached is not null)
+                {
+                    _logger.LogInformation("Returned all products from cache.");
+                    return cached;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Redis unavailable. Falling back to DB.");
             }
 
+            // идём в БД как в надёжный источник
             var products = await _repository.GetAll(cancellationToken).ToListAsync(cancellationToken);
 
-            await _productListCache.SetAsync(cacheKey, products, TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
+            try
+            {
+                await _productListCache.SetAsync(
+                    cacheKey,
+                    products,
+                    TimeSpan.FromMinutes(5),
+                    cancellationToken: cancellationToken
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to update Redis cache.");
+            }
 
             return products;
         }
 
+
         public async Task<Product> GetById(int id, CancellationToken cancellationToken)
         {
             string cacheKey = $"product:{id}";
-            var cached = await _cache.GetAsync(cacheKey, cancellationToken);
+            var cached = await _cache.GetAsync<Product>(cacheKey, cancellationToken);
 
             if (cached is not null)
             {

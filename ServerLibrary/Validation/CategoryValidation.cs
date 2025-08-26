@@ -1,6 +1,5 @@
 ﻿using BaseLibrary.Entities;
 using FluentValidation;
-using System.Text.RegularExpressions;
 
 namespace ServerLibrary.Validation
 {
@@ -12,7 +11,7 @@ namespace ServerLibrary.Validation
                 .NotEmpty().WithMessage("The category name must not be empty.")
                 .MinimumLength(3).WithMessage("The category name must be at least 3 characters long.")
                 .MaximumLength(100).WithMessage("The category name must not exceed 100 characters.")
-                .Matches(@"^[a-zA-Z0-9\s\-]+$").WithMessage("The category name can only contain letters, numbers, spaces, and hyphens.");
+                .Matches(@"^[a-zA-Zа-яА-ЯёЁ0-9\s-]+$").WithMessage("The category name can only contain letters, numbers, spaces, and hyphens.");
         }
     }
 }
