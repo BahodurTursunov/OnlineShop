@@ -1,0 +1,37 @@
+﻿version: '3.9'
+services:
+  server:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - ConnectionStrings__DBConnection=Host=postgres;Port=5432;Database=OnlineShop;Username=bakha;Password=0046t!@#BT;
+      - ConnectionStrings__Redis=redis:6379
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: my_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: OnlineShop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0046t!@#BT;
+    ports:
+      - "5555:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: my_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
