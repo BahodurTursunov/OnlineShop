@@ -178,7 +178,6 @@ namespace Server
             });
 
             app.UseRouting();
-
             // app.UseHttpsRedirection();
 
             app.UseRateLimiter();
@@ -186,18 +185,18 @@ namespace Server
             app.UseAuthentication();
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<ValidationMiddleware>();
+            
             app.UseAuthorization();
-
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
-
-
+            app.MapPrometheusScrapingEndpoint();
 
             app.MapControllers().RequireRateLimiting("fixed");
+            
             app.Run();
         }
     }

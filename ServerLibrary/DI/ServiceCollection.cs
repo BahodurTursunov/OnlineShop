@@ -14,11 +14,12 @@ using ServerLibrary.Services.Contracts.Cache;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Implementations.Auth;
 using ServerLibrary.Services.Implementations.Cache;
-
-//using ServerLibrary.Services.Implementations.Cache;
 using ServerLibrary.SignalR;
 using ServerLibrary.Validation;
 using System.Threading.RateLimiting;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace ServerLibrary.DI
 {
@@ -26,6 +27,25 @@ namespace ServerLibrary.DI
     {
         public static void AddMyServices(this IServiceCollection services)
         {
+            services.AddOpenTelemetry()
+                .WithTracing(tracerProviderBuilder =>
+                {
+                    tracerProviderBuilder
+                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("ProductService"))
+                        .AddAspNetCoreInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddEntityFrameworkCoreInstrumentation()
+                        .AddConsoleExporter();
+                })
+                .WithMetrics(metricsBuilder =>
+                {
+                    metricsBuilder
+                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("ProductService"))
+                        .AddAspNetCoreInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddRuntimeInstrumentation()
+                        .AddPrometheusExporter();
+                });
             services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IProductService, ProductService>();
@@ -72,34 +92,6 @@ namespace ServerLibrary.DI
                 options.EnableDetailedErrors = false;
                 options.KeepAliveInterval = TimeSpan.FromMinutes(5);
             });
-
-
-
-            //services.AddRateLimiter(options =>
-            //{
-            //    options.OnRejected = async (context, cancellationToken) =>
-            //    {
-            //        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-            //        context.HttpContext.Response.Headers["Retry-After"] = "30";
-            //        await context.HttpContext.Response.WriteAsync("Rate limit exceeded. Please try again later.", cancellationToken);
-            //    };
-
-            //    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-            //    {
-            //        var key = httpContext.User.Identity?.IsAuthenticated == true
-            //            ? $"user:{httpContext.User.Identity?.Name}"
-            //            : $"ip:{httpContext.Connection.RemoteIpAddress}";
-
-            //        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
-            //        {
-            //            PermitLimit = 3,
-            //            QueueLimit = 30,
-            //            Window = TimeSpan.FromSeconds(10),
-            //            AutoReplenishment = true
-            //        });
-            //    });
-            //});
-
 
             services.AddRateLimiter(opt2 =>
             {
