@@ -34,7 +34,7 @@ namespace ServerLibrary.SignalR
             }
         }
 
-        public override async Task OnDisconnectedAsync(Exception ex)
+        public override async Task OnDisconnectedAsync(Exception? ex)
         {
             // Отправляем сообщение всем клиентам о отключении
             await Clients.All.SendAsync("Notify", $"{Context.ConnectionId} вышел из чата.");

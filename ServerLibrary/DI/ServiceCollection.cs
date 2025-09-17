@@ -17,9 +17,6 @@ using ServerLibrary.Services.Implementations.Cache;
 using ServerLibrary.SignalR;
 using ServerLibrary.Validation;
 using System.Threading.RateLimiting;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 
 namespace ServerLibrary.DI
 {
@@ -27,25 +24,25 @@ namespace ServerLibrary.DI
     {
         public static void AddMyServices(this IServiceCollection services)
         {
-            services.AddOpenTelemetry()
-                .WithTracing(tracerProviderBuilder =>
-                {
-                    tracerProviderBuilder
-                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("ProductService"))
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation()
-                        .AddEntityFrameworkCoreInstrumentation()
-                        .AddConsoleExporter();
-                })
-                .WithMetrics(metricsBuilder =>
-                {
-                    metricsBuilder
-                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("ProductService"))
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation()
-                        .AddRuntimeInstrumentation()
-                        .AddPrometheusExporter();
-                });
+            /*   services.AddOpenTelemetry()
+                   .WithTracing(tracerProviderBuilder =>
+                   {
+                       tracerProviderBuilder
+                           .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("ProductService"))
+                           .AddAspNetCoreInstrumentation()
+                           .AddHttpClientInstrumentation()
+                           .AddEntityFrameworkCoreInstrumentation()
+                           .AddConsoleExporter();
+                   })
+                   .WithMetrics(metricsBuilder =>
+                   {
+                       metricsBuilder
+                           .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("ProductService"))
+                           .AddAspNetCoreInstrumentation()
+                           .AddHttpClientInstrumentation()
+                           .AddRuntimeInstrumentation()
+                           .AddPrometheusExporter();
+                   });*/
             services.AddScoped(typeof(ISqlRepository<>), typeof(SqlRepository<>));
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IProductService, ProductService>();
@@ -120,7 +117,7 @@ namespace ServerLibrary.DI
             });
 
             services.AddMyClaims();
-            services.AddAutoMapper(typeof(UserProfile));
+            services.AddAutoMapper(config => config.AddProfile<UserProfile>(), typeof(UserProfile));
         }
     }
 }

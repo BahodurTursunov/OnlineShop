@@ -13,7 +13,7 @@ namespace ServerLibrary.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20250529052259_second")]
-    partial class second
+    partial class Second
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

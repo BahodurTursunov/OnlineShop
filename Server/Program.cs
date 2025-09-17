@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
 using ServerLibrary.Data;
@@ -24,6 +28,24 @@ namespace Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            const string productService = "ProductsService";
+            const string userService = "UserService";
+            const string categoryService = "CategoryService";
+
+            builder.Logging.AddOpenTelemetry(opt =>
+            {
+                opt.SetResourceBuilder(ResourceBuilder.CreateDefault()
+                    .AddService(productService))
+                .AddConsoleExporter();
+            });
+            builder.Services.AddOpenTelemetry()
+                .ConfigureResource(resourse => resourse.AddService(productService))
+                .WithTracing(tracing => tracing
+                .AddAspNetCoreInstrumentation()
+                .AddConsoleExporter())
+                .WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation()
+                .AddConsoleExporter());
+
             #region JWT
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
             var jwtSection = builder.Configuration.GetSection("JwtSettings");
@@ -34,9 +56,9 @@ namespace Server
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
-                .WriteTo.File("logs/info_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information)
-                .WriteTo.File("logs/warning_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
-                .WriteTo.File("logs/error_log.txt", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Error)
+                .WriteTo.File("../logs/info_log.log", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Information)
+                .WriteTo.File("../logs/warning_log.log", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Warning)
+                .WriteTo.File("../logs/error_log.log", rollingInterval: RollingInterval.Day, restrictedToMinimumLevel: LogEventLevel.Error)
                 .CreateLogger();
 
             builder.Host.UseSerilog();
@@ -139,10 +161,11 @@ namespace Server
 
             var app = builder.Build();
 
+
             // предназначен для отклонения подозрительных скриптов
             app.Use(async (context, next) =>
             {
-                context.Response.Headers.Add("Content-Secutiry-Policy", "default-src 'self'");
+                context.Response.Headers.Append("Content-Secutiry-Policy", "default-src 'self'");
                 await next();
             });
 
@@ -185,7 +208,7 @@ namespace Server
             app.UseAuthentication();
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseMiddleware<ValidationMiddleware>();
-            
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -193,10 +216,10 @@ namespace Server
                 endpoints.MapControllers();
             });
 
-            app.MapPrometheusScrapingEndpoint();
+            //app.MapPrometheusScrapingEndpoint();
 
             app.MapControllers().RequireRateLimiting("fixed");
-            
+
             app.Run();
         }
     }
