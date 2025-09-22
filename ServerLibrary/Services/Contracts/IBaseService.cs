@@ -2,7 +2,7 @@
 {
     public interface IBaseService<T> where T : class
     {
-        string FirstName { get; set; }
+        //string FirstName { get; set; }
         IQueryable<T> GetAll(CancellationToken cancellationToken);
         Task<T> GetById(int id, CancellationToken cancellationToken);
         Task<T> Create(T entity, CancellationToken cancellationToken);

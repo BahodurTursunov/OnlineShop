@@ -48,7 +48,7 @@ namespace ServerLibrary.Services.Implementations.Auth
             return response;
         }
 
-        public async Task<UserDTO> RegisterAsync(RegisterUserDTO dto, CancellationToken cancellationToken)
+        public async Task<CreateUserDTO> RegisterAsync(RegisterUserDTO dto, CancellationToken cancellationToken)
         {
             if (await _dbContext.Users.AnyAsync(u => u.Username == dto.Username || u.Email == dto.Email))
             {
@@ -69,13 +69,13 @@ namespace ServerLibrary.Services.Implementations.Auth
 
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync(cancellationToken);
-            return new UserDTO
+            return new CreateUserDTO
             {
                 Username = user.Username,
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                PasswordHash = user.PasswordHash
+                Password = user.PasswordHash
             };
         }
 

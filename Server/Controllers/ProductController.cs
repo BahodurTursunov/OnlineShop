@@ -1,132 +1,109 @@
-﻿using BaseLibrary.Entities;
+﻿using AutoMapper;
+using BaseLibrary.DTOs;
+using BaseLibrary.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ServerLibrary.Services.Contracts;
-using ServerLibrary.Services.Contracts.Cache;
 
 namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api")]
-    public class ProductController(IProductService productService, ILogger<ProductController> logger, IRedisCacheService<Product> cacheService) : ControllerBase
+    public class ProductController(IProductService productService, ILogger<ProductController> logger, IMapper mapper) : ControllerBase
     {
         private readonly IProductService _productService = productService;
-        private readonly IRedisCacheService<Product> _cacheService = cacheService;
+        private readonly IMapper _mapper = mapper;
         private readonly ILogger<ProductController> _logger = logger;
 
-        /// <summary>
-        /// Create product
-        /// </summary>
-        /// <param name="product"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+
         [Authorize(Roles = "Admin")]
         [HttpPost("products")]
-        public async Task<IActionResult> CreateProduct([FromBody] Product product, CancellationToken cancellationToken)
+        public async Task<ActionResult<ProductDTO>> CreateProduct([FromBody] CreateProductDTO createProductDto, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(product.Name))
-            {
-                _logger.LogWarning("Attempt to create a product with an empty request body.");
-                return BadRequest("Product name cannot be empty.");
-            }
+            var productToCreate = _mapper.Map<Product>(createProductDto);
 
-            var createdProduct = await _productService.Create(product, cancellationToken);
-            _logger.LogInformation($"Product {createdProduct.Name} successfully created.");
-            return Ok(new { message = $"Product {product.Name} successfully created" });
+            try
+            {
+                var createdProduct = await _productService.Create(productToCreate, cancellationToken);
+                var productDto = _mapper.Map<ProductDTO>(createdProduct);
+
+                return CreatedAtAction(nameof(GetProductById), new { id = productDto.Id }, productDto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Conflict during product createation");
+                return Conflict(new { message = ex.Message });
+            }
         }
 
-        /// <summary>
-        /// Get all products
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <response code = "429">Too many requests</response>
 
-        ///[Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         //[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         //[EnableRateLimiting("fixed")]
         [HttpGet("products")]
         public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts(CancellationToken cancellationToken)
         {
             var products = await _productService.GetAllCached(cancellationToken);
+
+            var productDtos = _mapper.Map<IEnumerable<ProductDTO>>(products);
+
             _logger.LogInformation("Request to retrieve all products.");
-            return Ok(products);
+
+            return Ok(productDtos);
         }
 
-        /// <summary>
-        /// Get product with id 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        [HttpGet("products/{id}")]
-        public async Task<IActionResult> GetProductById(int id, CancellationToken cancellationToken)
-        {
-            var product = await _productService.GetById(id, cancellationToken);
 
-            if (product == null)
+        [HttpGet("products/{id}")]
+        public async Task<ActionResult<ProductDTO>> GetProductById(int id, CancellationToken cancellationToken)
+        {
+            try
             {
-                _logger.LogWarning($"Product with ID {id} not found.");
+                var product = await _productService.GetById(id, cancellationToken);
+
+                var productDto  = _mapper.Map<ProductDTO>(product);
+
+                return Ok(productDto);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning($"Product with ID {id} not found. Exception: {ex}");
                 return NotFound();
             }
-
-            return Ok(product);
         }
 
-
-        /// <summary>
-        /// Update product by id
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="product"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpPut("products/{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product, CancellationToken cancellationToken)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] CreateProductDTO updateProductDto, CancellationToken cancellationToken)
         {
-            if (product == null)
+            try
             {
-                _logger.LogWarning("Attempt to update a product with an empty request body.");
-                return BadRequest("Product cannot be empty.");
+                var productToUpdate = _mapper.Map<Product>(updateProductDto);
+
+                await _productService.Update(id, productToUpdate, cancellationToken);
+
+                return NoContent();
             }
-
-            var updatedProduct = await _productService.Update(id, product, cancellationToken);
-
-            if (updatedProduct == null)
+            catch (KeyNotFoundException ex)
             {
-                _logger.LogWarning($"Product with ID {id} not found.");
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
-
-            _logger.LogInformation($"Product with ID {id} was updated.");
-            return Ok(updatedProduct);
         }
 
-
-        /// <summary>
-        /// Delete product by id
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         [Authorize(Roles = "Admin")]
         [HttpDelete("products/{id}")]
         public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
-            var result = await _productService.Delete(id, cancellationToken);
-
-            if (result is null)
+            try
             {
-                _logger.LogWarning($"Product with ID {id} not found when attempting to delete.");
-                return NotFound();
+                await _productService.Delete(id, cancellationToken);
+
+                return NoContent();
             }
-
-            return Ok(new
+            catch (KeyNotFoundException)
             {
-                message = $"Product {result.Name} deleted.",
-                id = result.Id
-            });
+                return NoContent();
+            }
         }
     }
 }

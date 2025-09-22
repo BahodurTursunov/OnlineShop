@@ -7,10 +7,6 @@ namespace ServerLibrary.Validation
     {
         public UserValidation()
         {
-            RuleFor(x => x.Id)
-                .NotEmpty()
-                .NotNull();
-
             RuleFor(x => x.FirstName)
                 .NotEmpty()
                 .Length(1, 20)

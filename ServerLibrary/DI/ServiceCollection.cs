@@ -117,7 +117,7 @@ namespace ServerLibrary.DI
             });
 
             services.AddMyClaims();
-            services.AddAutoMapper(config => config.AddProfile<UserProfile>(), typeof(UserProfile));
+            services.AddAutoMapper(config => config.AddProfile<MappingProfile>(), typeof(MappingProfile));
         }
     }
 }

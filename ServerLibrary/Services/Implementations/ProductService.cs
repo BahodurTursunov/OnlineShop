@@ -34,6 +34,8 @@ namespace ServerLibrary.Services.Implementations
                 throw new InvalidOperationException($"Failed to create product '{entity.Name}'");
             }
 
+            await InvalidateProductCachesAsync(created.Id, cancellationToken);
+
             _logger.LogInformation("Created product: {Name}", created.Name);
             return created;
         }
@@ -49,13 +51,15 @@ namespace ServerLibrary.Services.Implementations
 
             try
             {
-                var cached = await _cache.GetAsync<List<Product>>(cacheKey, cancellationToken);
+                var cached = await _productListCache.GetAsync(cacheKey, cancellationToken);
+
                 if (cached is not null)
                 {
                     _logger.LogInformation("Returned all products from cache.");
                     return cached;
                 }
             }
+
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Redis unavailable. Falling back to DB.");
@@ -66,16 +70,25 @@ namespace ServerLibrary.Services.Implementations
 
             try
             {
-                await _productListCache.SetAsync(
+                bool success = await _productListCache.SetAsync(
                     cacheKey,
                     products,
                     TimeSpan.FromMinutes(5),
                     cancellationToken: cancellationToken
                 );
+
+                if (success)
+                {
+                    _logger.LogInformation("Product list stored in cache successfully.");
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to store product list in cache.");
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to update Redis cache.");
+                _logger.LogWarning(ex, "An unexpected error occurred while trying to update Redis cache.");
             }
 
             return products;
@@ -85,7 +98,8 @@ namespace ServerLibrary.Services.Implementations
         public async Task<Product> GetById(int id, CancellationToken cancellationToken)
         {
             string cacheKey = $"product:{id}";
-            var cached = await _cache.GetAsync<Product>(cacheKey, cancellationToken);
+
+            var cached = await _cache.GetAsync(cacheKey, cancellationToken);
 
             if (cached is not null)
             {
@@ -94,13 +108,20 @@ namespace ServerLibrary.Services.Implementations
             }
 
             var product = await _repository.GetById(id, cancellationToken);
+
             if (product is null)
             {
                 _logger.LogWarning("Product with ID {Id} not found", id);
                 throw new KeyNotFoundException($"Product with ID {id} not found.");
             }
 
-            await _cache.SetAsync(cacheKey, product, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(5), cancellationToken);
+            bool success = await _cache.SetAsync(cacheKey, product, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(5), cancellationToken);
+
+            if (success)
+            {
+                _logger.LogInformation("Successfully cached product with ID {Id}", id);
+
+            }
             return product;
         }
 
@@ -127,6 +148,7 @@ namespace ServerLibrary.Services.Implementations
             _validator.Validate(entity);
 
             Product? existing = await _repository.GetById(id, cancellationToken);
+
             if (existing is null)
             {
                 _logger.LogWarning("Product with ID {Id} not found", id);
@@ -142,6 +164,9 @@ namespace ServerLibrary.Services.Implementations
             existing.UpdatedAt = DateTime.UtcNow;
 
             Product updated = await _repository.UpdateAsync(existing, cancellationToken);
+
+            await InvalidateProductCachesAsync(id, cancellationToken);
+
             _logger.LogInformation("Updated product ID {Id}", updated.Id);
 
             return updated;
@@ -149,15 +174,31 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<Product> Delete(int id, CancellationToken cancellationToken)
         {
-            Product? existing = await _repository.GetById(id, cancellationToken);
-            if (existing is null)
-            {
-                _logger.LogWarning("Product with ID {Id} not found", id);
-                throw new KeyNotFoundException($"Product with ID {id} not found.");
-            }
+            Product deletedProduct = await _repository.DeleteAsync(id, cancellationToken);
+
+            await InvalidateProductCachesAsync(id, cancellationToken);
 
             _logger.LogInformation("Deleting product ID {Id}", id);
-            return await _repository.DeleteAsync(id, cancellationToken);
+
+            return deletedProduct;
+        }
+
+        private async Task InvalidateProductCachesAsync(int productId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                const string listCacheKey = "products:all";
+                string productCacheKey = $"product:{productId}";
+
+                await _productListCache.RemoveAsync(listCacheKey, cancellationToken);
+                await _cache.RemoveAsync(productCacheKey, cancellationToken);
+
+                _logger.LogInformation($"Invalidated caches for key {listCacheKey} and {productCacheKey}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Failed to invalidate product cacher for product Id {productId}");
+            }
         }
     }
 }

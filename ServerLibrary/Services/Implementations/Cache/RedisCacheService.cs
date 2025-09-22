@@ -1,8 +1,8 @@
-﻿// ServerLibrary/Services/Implementations/Cache/RedisCacheService.cs
-using Microsoft.Extensions.Caching.Distributed;
+﻿using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using ServerLibrary.Services.Contracts.Cache;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ServerLibrary.Services.Implementations.Cache
 {
@@ -12,7 +12,8 @@ namespace ServerLibrary.Services.Implementations.Cache
         private readonly ILogger<RedisCacheService<T>> _logger;
         private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
         {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            ReferenceHandler = ReferenceHandler.Preserve
         };
 
         public RedisCacheService(IDistributedCache cache, ILogger<RedisCacheService<T>> logger)
@@ -21,7 +22,7 @@ namespace ServerLibrary.Services.Implementations.Cache
             _logger = logger;
         }
 
-        public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+        public async Task<T?> GetAsync(string key, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -35,12 +36,12 @@ namespace ServerLibrary.Services.Implementations.Cache
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Cache GET error for key '{Key}'", key);
+                _logger.LogError(ex, $"Cache GET error for key {key} for tpe {typeof(T).Name}");
                 return default;
             }
         }
 
-        public async Task<T> SetAsync(string key, T value, TimeSpan? absoluteExpiration = null, TimeSpan? slidingExpiration = null, CancellationToken cancellationToken = default)
+        public async Task<bool> SetAsync(string key, T value, TimeSpan? absoluteExpiration = null, TimeSpan? slidingExpiration = null, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -58,12 +59,12 @@ namespace ServerLibrary.Services.Implementations.Cache
                 }
 
                 await _cache.SetStringAsync(key, json, options, cancellationToken);
-                return value;
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Cache SET error for key '{Key}'", key);
-                return default;
+                return false;
             }
         }
 

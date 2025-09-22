@@ -6,30 +6,39 @@ using ServerLibrary.Services.Contracts.Cache;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class CartService(ICartRepository repository, IRedisCacheService<CartService> cartCache, ILogger<CartService> logger) : ICartService
+    public class CartService(ICartRepository repository, IRedisCacheService<Cart> cartCache, ILogger<CartService> logger) : ICartService
     {
         private readonly ICartRepository _repository = repository;
-        private readonly IRedisCacheService<CartService> _cartCache = cartCache;
+        private readonly IRedisCacheService<Cart> _cartCache = cartCache;
         private readonly ILogger<CartService> _logger = logger;
 
         public async Task<Cart> GetCartByUserIdAsync(int userId, CancellationToken cancellationToken)
         {
             string cachedKey = $"cart:user:{userId}";
 
-            var cachedCart = await _cartCache.GetAsync<Cart>(cachedKey, cancellationToken);
+            var cachedCart = await _cartCache.GetAsync(cachedKey, cancellationToken);
+
             if (cachedCart != null)
             {
                 _logger.LogInformation($"Retrieved cart from cache for user {userId}");
                 return cachedCart;
             }
 
-            return await _repository.GetByUserIdAsync(userId, includeItems: true, cancellationToken)
-                   ?? throw new InvalidOperationException("Cart not found");
+            _logger.LogInformation("Cart not found in cache. Fetching from repository for user {UserId}", userId);
+            var cartFromDb = await _repository.GetByUserIdAsync(userId, includeItems: true, cancellationToken)
+                             ?? throw new InvalidOperationException("Cart not found");
+
+            await _cartCache.SetAsync(cachedKey, cartFromDb, TimeSpan.FromMinutes(30), cancellationToken: cancellationToken);
+            _logger.LogInformation("Stored cart in cache for user {UserId}", userId);
+
+            return cartFromDb;
+
         }
 
         public async Task<CartItem> AddItemToCartAsync(int userId, int productId, int quantity, CancellationToken cancellationToken)
         {
             var cart = await _repository.GetByUserIdAsync(userId, includeItems: true, cancellationToken);
+
             var product = await _repository.GetProductByIdAsync(productId, cancellationToken)
                           ?? throw new InvalidOperationException("Product not found");
 
@@ -71,6 +80,9 @@ namespace ServerLibrary.Services.Implementations
             }
 
             await _repository.SaveChangesAsync(cancellationToken);
+
+            await InvalidateCartCacheAsync(userId, cancellationToken);
+
             return cart.CartItems.First(i => i.ProductId == productId);
         }
 
@@ -96,6 +108,9 @@ namespace ServerLibrary.Services.Implementations
             }
 
             await _repository.SaveChangesAsync(cancellationToken);
+
+            await InvalidateCartCacheAsync(userId, cancellationToken);
+
             return item;
         }
 
@@ -114,6 +129,8 @@ namespace ServerLibrary.Services.Implementations
             }
 
             cart.CartItems.Remove(item);
+            await InvalidateCartCacheAsync(userId, cancellationToken);
+
             await _repository.SaveChangesAsync(cancellationToken);
             return true;
         }
@@ -129,6 +146,19 @@ namespace ServerLibrary.Services.Implementations
             cart.CartItems.Clear();
             await _repository.SaveChangesAsync(cancellationToken);
             return true;
+        }
+        private async Task InvalidateCartCacheAsync(int userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                string cacheKey = $"cart:user:{userId}";
+                await _cartCache.RemoveAsync(cacheKey, cancellationToken);
+                _logger.LogInformation("Invalidated cart cache for user {UserId}", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to invalidate cart cache for user {UserId}", userId);
+            }
         }
     }
 }

@@ -1,20 +1,18 @@
 ﻿using BaseLibrary.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using ServerLibrary.Data;
 using ServerLibrary.Exceptions;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Cache;
-//using ServerLibrary.Services.Contracts.Cache;
 
 namespace ServerLibrary.Services.Implementations
 {
-    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, ApplicationDbContext db, IRedisCacheService<User> cache) : IUserService
+    public class UserService(ISqlRepository<User> repository, ILogger<UserService> logger, IRedisCacheService<User> cache, IEntityValidator<User> validator) : IUserService
     {
         private readonly ISqlRepository<User> _repository = repository;
         private readonly ILogger<UserService> _logger = logger;
-        private readonly ApplicationDbContext _db = db;
+        private readonly IEntityValidator<User> _validator = validator;
         private readonly IRedisCacheService<User> _cache = cache;
 
         #region CRUD Operations
@@ -22,87 +20,77 @@ namespace ServerLibrary.Services.Implementations
         {
             _logger.LogInformation($"Attempting to add user {user.Username} to the database.");
 
-            if (string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Email))
-            {
-                _logger.LogWarning("Validation error: Username and Email are required.");
-                throw new ArgumentException("Username and Email cannot be empty.");
-            }
+            _validator.Validate(user);
 
-            if (await _db.Users.AnyAsync(u => u.Username == user.Username, cancellationToken))
-            {
-                _logger.LogWarning($"User with username {user.Username} already exists.");
-                throw new UsernameAlreadyExistsException();
-            }
-
-            if (await _db.Users.AnyAsync(e => e.Email == user.Email, cancellationToken))
+            if (await _repository.GetAll(cancellationToken).AnyAsync(e => e.Email == user.Email, cancellationToken))
             {
                 _logger.LogWarning($"Attempt to create a user with an already existing email: {user.Email}");
                 throw new UserMailAlreadyExistsException();
             }
 
+            if (await _repository.GetAll(cancellationToken).AnyAsync(u => u.Username == user.Username, cancellationToken))
+            {
+                _logger.LogWarning($"User with username {user.Username} already exists.");
+                throw new UsernameAlreadyExistsException();
+            }
+
+            /*  if (await _db.Users.AnyAsync(e => e.Email == user.Email, cancellationToken))
+              {
+                  _logger.LogWarning($"Attempt to create a user with an already existing email: {user.Email}");
+                  throw new UserMailAlreadyExistsException();
+              }*/
+
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
-            await _repository.CreateAsync(user, cancellationToken);
+
+            var createdUser = await _repository.CreateAsync(user, cancellationToken);
 
             _logger.LogInformation($"User {user.Username} was successfully added to the database.");
-            return user;
+            return createdUser;
         }
 
         public async Task<User> Delete(int id, CancellationToken cancellationToken)
         {
-            //ValidationResult result = await _validator.ValidateAsync();
             _logger.LogInformation($"Attempting to delete user with ID: {id}");
 
-            var user = await _repository.GetById(id, cancellationToken);
-            if (user == null)
-            {
-                _logger.LogWarning($"User with ID {id} was not found.");
-                throw new KeyNotFoundException($"User with ID {id} was not found.");
-            }
+            var deletedUser = await _repository.DeleteAsync(id, cancellationToken);
 
-            await _repository.DeleteAsync(id, cancellationToken);
+            await InvalidateUserCacheAsync(id, cancellationToken);
+
             _logger.LogInformation($"User with ID {id} was successfully deleted.");
 
-            return user;
+            return deletedUser;
         }
 
         public IQueryable<User> GetAll(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching all users from the database.");
+
             return _repository.GetAll(cancellationToken);
         }
 
         public async Task<User> GetById(int id, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Attempting to retrieve user with ID {id} from the database.");
-
+            _logger.LogInformation($"Attempting to retrieve user with ID {id}.");
             var cacheKey = $"user:{id}";
 
-            var user = await _cache.GetAsync<User>(cacheKey, cancellationToken);
-
+            var user = await _cache.GetAsync(cacheKey, cancellationToken);
             if (user != null)
             {
-                _logger.LogInformation($"User with {id} has been retrieved from the cache.");
+                _logger.LogInformation($"User with ID {id} has been retrieved from the cache.");
                 return user;
             }
 
-            if (user == null)
-            {
-                user = await _repository.GetById(id, cancellationToken);
-                if (user != null)
-                {
-                    await _cache.SetAsync(cacheKey, user, absoluteExpiration: TimeSpan.FromMinutes(10), slidingExpiration: TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
-                }
-                _logger.LogInformation($"User with {id} has been cached.");
-            }
-            else
-            {
-                _logger.LogInformation($"User with {id} has been retrieved from the cache.");
-            }
+            user = await _repository.GetById(id, cancellationToken);
 
             if (user is null)
             {
                 _logger.LogWarning($"User with ID {id} was not found in the database.");
+                throw new KeyNotFoundException($"User with ID {id} not found.");
             }
+
+            // Кэшируем только если нашли
+            await _cache.SetAsync(cacheKey, user, absoluteExpiration: TimeSpan.FromMinutes(10), slidingExpiration: TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
+            _logger.LogInformation($"User with ID {id} has been retrieved from DB and cached.");
 
             return user;
         }
@@ -119,9 +107,9 @@ namespace ServerLibrary.Services.Implementations
                 throw new KeyNotFoundException($"User with ID {id} was not found in the database.");
             }
 
-            if (!string.IsNullOrWhiteSpace(entity.Username))
+            if (!string.IsNullOrWhiteSpace(entity.Username) && existingUser.Username != entity.Username)
             {
-                if (await _db.Users.AnyAsync(u => u.Username == entity.Username && u.Id != id, cancellationToken))
+                if (await _repository.GetAll(cancellationToken).AnyAsync(u => u.Username == entity.Username && u.Id != id, cancellationToken))
                 {
                     _logger.LogWarning($"Attempt to update to an already existing username: {entity.Username}");
                     throw new InvalidOperationException("A user with this username already exists.");
@@ -129,9 +117,9 @@ namespace ServerLibrary.Services.Implementations
                 existingUser.Username = entity.Username;
             }
 
-            if (!string.IsNullOrWhiteSpace(entity.Email))
+            if (!string.IsNullOrWhiteSpace(entity.Email) && existingUser.Email != entity.Email)
             {
-                if (await _db.Users.AnyAsync(u => u.Email == entity.Email && u.Id != id, cancellationToken))
+                if (await _repository.GetAll(cancellationToken).AnyAsync(u => u.Email == entity.Email && u.Id != id, cancellationToken))
                 {
                     _logger.LogWarning($"Attempt to update to an already existing email: {entity.Email}");
                     throw new InvalidOperationException("A user with this email already exists.");
@@ -142,11 +130,28 @@ namespace ServerLibrary.Services.Implementations
             existingUser.FirstName = entity.FirstName ?? existingUser.FirstName;
             existingUser.LastName = entity.LastName ?? existingUser.LastName;
 
-            await _repository.UpdateAsync(existingUser, cancellationToken);
+            var updatedUser = await _repository.UpdateAsync(existingUser, cancellationToken);
+
+            await InvalidateUserCacheAsync(id, cancellationToken);
+
             _logger.LogInformation($"User with ID {id} was successfully updated.");
 
-            return existingUser;
+            return updatedUser;
         }
         #endregion
+
+        private async Task InvalidateUserCacheAsync(int userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                string cacheKey = $"user:{userId}";
+                await _cache.RemoveAsync(cacheKey, cancellationToken);
+                _logger.LogInformation("Invalidated cache for user ID {UserId}", userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to invalidate cache for user ID {UserId}", userId);
+            }
+        }
     }
 }

@@ -1,40 +1,56 @@
+using AutoMapper;
+using BaseLibrary.DTOs;
 using BaseLibrary.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using ServerLibrary.Exceptions;
 using ServerLibrary.Services.Contracts;
 
 namespace Server.Controllers
 {
     [ApiController]
     [Route("v1/api")]
-    public class UserController(IUserService userService, ILogger<UserController> logger) : ControllerBase
+    public class UserController(IUserService userService, ILogger<UserController> logger, IMapper mapper) : ControllerBase
     {
         private readonly IUserService _userService = userService;
+        private readonly IMapper _mapper = mapper;
         private readonly ILogger<UserController> _logger = logger;
 
         /// <summary>
         /// Create Admin
         /// </summary>
-        /// <param name="user"></param>
+        /// <param name="createUserDto"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser([FromBody] User user, CancellationToken cancellationToken) // предназначен для создания Админов системы
+        public async Task<ActionResult<UserDTO>> CreateUser([FromBody] CreateUserDTO createUserDto, CancellationToken cancellationToken) // предназначен для создания Админов системы
         {
-            if (user == null)
+          
+            var userToCreate = _mapper.Map<User>(createUserDto);
+
+            try
             {
-                _logger.LogWarning("Attempt to create a user with an empty request body.");
-                return BadRequest("User cannot be empty.");
+                var createdUser = await _userService.Create(userToCreate, cancellationToken);
+
+                var userDto = _mapper.Map<UserDTO>(createdUser);
+
+                return CreatedAtAction(nameof(GetUserById), new { id = userDto.Id }, userDto);
             }
-
-            var createdUser = await _userService.Create(user, cancellationToken);
-            _logger.LogInformation($"User {createdUser.Username} successfully created.");
-
-            return CreatedAtAction(nameof(GetUserById), new { id = createdUser.Id }, createdUser);
+            catch (UsernameAlreadyExistsException ex)
+            {
+                _logger.LogWarning(ex, $"Username {createUserDto.Username} already exist");
+                return Conflict(new { message = ex.Message });
+            }
+            catch (UserMailAlreadyExistsException ex)
+            {
+                _logger.LogWarning(ex, $"Email {createUserDto.Email} already exist");
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -46,12 +62,13 @@ namespace Server.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpGet("users")]
-        public ActionResult<IEnumerable<User>> GetAllUsers(CancellationToken cancellationToken)
+        public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsers(CancellationToken cancellationToken)
         {
-            var users = _userService.GetAll(cancellationToken);
-            _logger.LogInformation("Request to retrieve all users.");
+            var users = await _userService.GetAll(cancellationToken).ToListAsync(cancellationToken);
 
-            return Ok(users);
+            var userDtos = _mapper.Map<IEnumerable<UserDTO>>(users);
+
+            return Ok(userDtos);
         }
 
         /// <summary>
@@ -66,15 +83,19 @@ namespace Server.Controllers
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUserById(int id, CancellationToken cancellationToken)
         {
-            var user = await _userService.GetById(id, cancellationToken);
+            try
+            {
+                var user = await _userService.GetById(id, cancellationToken);
 
-            if (user == null)
+                var userDto = _mapper.Map<UserDTO>(user);
+
+                return Ok(userDto);
+            }
+            catch (KeyNotFoundException)
             {
                 _logger.LogWarning($"User with ID {id} not found.");
-                return NotFound(new { message = "User not found" });
+                return NotFound();
             }
-
-            return Ok(user);
         }
 
         /// <summary>
@@ -90,22 +111,21 @@ namespace Server.Controllers
         [HttpPut("users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user, CancellationToken cancellationToken)
         {
-            if (user == null)
+            try
             {
-                _logger.LogWarning("Attempt to update a user with an empty request body.");
-                return BadRequest("User cannot be empty.");
+                var userToUpdate = new User
+                {
+                    FirstName = user.FirstName,
+                    LastName = user.LastName
+                };
+
+                await _userService.Update(id, userToUpdate, cancellationToken);
+                return NoContent();
             }
-
-            var updatedUser = await _userService.Update(id, user, cancellationToken);
-
-            if (updatedUser == null)
+            catch (KeyNotFoundException)
             {
-                _logger.LogWarning($"User with ID {id} not found.");
                 return NotFound();
             }
-
-            _logger.LogInformation($"User with ID {id} was updated.");
-            return Ok(updatedUser);
         }
 
 
@@ -121,19 +141,16 @@ namespace Server.Controllers
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id, CancellationToken cancellationToken)
         {
-            var result = await _userService.Delete(id, cancellationToken);
-
-            if (result is null)
+            try
             {
-                _logger.LogWarning($"User with ID {id} not found when attempting to delete.");
-                return NotFound();
+                await _userService.Delete(id, cancellationToken);
+
+                return NoContent();
             }
-
-            return Ok(new
+            catch (KeyNotFoundException)
             {
-                message = $"User {result.Username} deleted.",
-                id = result.Id
-            });
+                return NoContent();
+            }
         }
     }
 }
