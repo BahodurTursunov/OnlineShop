@@ -23,3 +23,11 @@
 **/values.dev.yaml
 LICENSE
 README.md
+**/bin
+**/obj
+.git
+.vs
+.vscode
+**/appsettings.Development.json
+**/secrets.json
+**/launchSettings.json

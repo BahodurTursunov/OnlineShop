@@ -17,6 +17,7 @@ using ServerLibrary.SignalR;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+
 #endregion
 
 
@@ -28,23 +29,29 @@ namespace Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            const string productService = "ProductsService";
-            const string userService = "UserService";
-            const string categoryService = "CategoryService";
+            const string serviceName = "OnlineShop-API";
 
-            builder.Logging.AddOpenTelemetry(opt =>
-            {
-                opt.SetResourceBuilder(ResourceBuilder.CreateDefault()
-                    .AddService(productService))
-                .AddConsoleExporter();
-            });
+
+            builder.Host.UseSerilog((context, configuration) =>
+                configuration.ReadFrom.Configuration(context.Configuration));
+
             builder.Services.AddOpenTelemetry()
-                .ConfigureResource(resourse => resourse.AddService(productService))
-                .WithTracing(tracing => tracing
-                .AddAspNetCoreInstrumentation()
-                .AddConsoleExporter())
-                .WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation()
-                .AddConsoleExporter());
+                .ConfigureResource(resource => resource.AddService(serviceName))
+                .WithTracing(tracing =>
+                {
+                    tracing
+                        .AddAspNetCoreInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddConsoleExporter();
+                })
+                .WithMetrics(metrics =>
+                {
+                    metrics
+                        .AddAspNetCoreInstrumentation()
+                        .AddRuntimeInstrumentation()
+                        .AddConsoleExporter();
+                    metrics.AddPrometheusExporter();
+                });
 
             #region JWT
             builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -215,8 +222,8 @@ namespace Server
             {
                 endpoints.MapControllers();
             });
-
-            //app.MapPrometheusScrapingEndpoint();
+            app.UseSerilogRequestLogging();
+            app.MapPrometheusScrapingEndpoint();
 
             app.MapControllers().RequireRateLimiting("fixed");
 
