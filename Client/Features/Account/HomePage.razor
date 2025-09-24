@@ -1,0 +1,59 @@
+﻿@page "/"
+@using System.Net.Http.Json
+@using ClientLibrary
+
+@inject HttpClient Http
+
+<PageTitle>Home</PageTitle>
+
+<h1>Список продуктов</h1>
+
+@if (products == null)
+{
+    <p><em>Загрузка продуктов...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Цена</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Description</td>
+                    <td>@product.Price</td>
+                    <td>@product.Stock</td>
+                    <td>@product.Category</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    // Массив для хранения продуктов, полученных с API
+    private ProductDTO[]? products;
+
+    // Этот метод автоматически вызывается при инициализации страницы
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Отправляем GET-запрос к нашему API
+            // HttpClient уже знает базовый адрес (localhost:8080), нам нужно только добавить путь
+            products = await Http.GetFromJsonAsync<ProductDTO[]>("v1/api/products");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при загрузке продуктов: {ex.Message}");
+        }
+    }
+}

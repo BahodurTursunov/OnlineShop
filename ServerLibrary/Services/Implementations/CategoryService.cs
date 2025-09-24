@@ -35,7 +35,7 @@ namespace ServerLibrary.Services.Implementations
                 throw new ValidationException(errors);
             }
             var existing = await _repository.GetAll(cancellationToken)
-                .AnyAsync(c => c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase), cancellationToken);
+    .AnyAsync(c => c.Name.ToLower() == entity.Name.ToLower(), cancellationToken);
 
             if (existing)
             {
@@ -103,8 +103,8 @@ namespace ServerLibrary.Services.Implementations
                 throw new KeyNotFoundException($"Category with ID {id} was not found.");
             }
 
-            var nameConflict = _repository.GetAll(cancellationToken)
-                .AnyAsync(c => c.Id != id && c.Name.Equals(entity.Name, StringComparison.OrdinalIgnoreCase), cancellationToken);
+            var nameConflict = await _repository.GetAll(cancellationToken)
+                .AnyAsync(c => c.Id != id && c.Name.ToLower() == entity.Name.ToLower(), cancellationToken);
 
             if (nameConflict != null)
             {

@@ -6,6 +6,7 @@ volumes:
   postgres_data:
   redis_data:
   grafana-storage:
+  pgadmin_data:
 
 services:
   server:
@@ -16,28 +17,53 @@ services:
       - postgres
       - redis
     environment:
-      - ConnectionStrings__DBConnection=Host=postgres;Port=5555;Database=OnlineShop;Username=bakha;Password=0046t!@#BT;
+      - 'ConnectionStrings__DBConnection=Host=postgres;Port=5432;Database=OShop;Username=bakha;Password=0046t!@#BT'
       - ConnectionStrings__Redis=redis:6379
     networks:
       - app-network
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16
     container_name: my_postgres
     restart: always
     environment:
-      POSTGRES_DB: OnlineShop
+      POSTGRES_DB: OShop
       POSTGRES_USER: bakha
-      POSTGRES_PASSWORD: 0046t!@#BT;
+      POSTGRES_PASSWORD: '0046t!@#BT'
     ports:
       - "5555:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bakha -d OShop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: my_pgadmin
+    restart: always
+    environment:
+      # Задаем логин и пароль для входа в сам pgAdmin
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      # Пробрасываем порт 80 внутри контейнера на порт 5050 на вашем компьютере
+      - "5050:80"
+    volumes:
+      # Сохраняем настройки и серверы pgAdmin между перезапусками
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      # !! ВАЖНО: Добавляем в ту же сеть, что и postgres !!
+      - app-network
 
   redis:
-    image: redis:7-alpine
+    image: redis:7
     container_name: my_redis
     ports:
       - "6379:6379"

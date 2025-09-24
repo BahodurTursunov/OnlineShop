@@ -25,7 +25,7 @@ namespace Server.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [EnableRateLimiting("fixed")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [HttpPost("users")]
         public async Task<ActionResult<UserDTO>> CreateUser([FromBody] CreateUserDTO createUserDto, CancellationToken cancellationToken) // предназначен для создания Админов системы
