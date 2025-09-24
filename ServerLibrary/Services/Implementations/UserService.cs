@@ -5,6 +5,7 @@ using ServerLibrary.Exceptions;
 using ServerLibrary.Repositories.Contracts;
 using ServerLibrary.Services.Contracts;
 using ServerLibrary.Services.Contracts.Cache;
+using ServerLibrary.Services.Contracts.Validation;
 
 namespace ServerLibrary.Services.Implementations
 {
@@ -109,7 +110,7 @@ namespace ServerLibrary.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(entity.Username) && existingUser.Username != entity.Username)
             {
-                if (await _repository.GetAll(cancellationToken).AnyAsync(u => u.Username == entity.Username && u.Id != id, cancellationToken))
+                if (await _repository.GetAll(cancellationToken).AnyAsync(u => u.Username.ToLower() == entity.Username.ToLower() && u.Id != id, cancellationToken))
                 {
                     _logger.LogWarning($"Attempt to update to an already existing username: {entity.Username}");
                     throw new InvalidOperationException("A user with this username already exists.");

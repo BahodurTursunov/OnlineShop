@@ -1,4 +1,4 @@
-﻿namespace ServerLibrary.Services.Contracts
+﻿namespace ServerLibrary.Services.Contracts.Validation
 {
     public interface IEntityValidator<T> where T : class
     {

@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.Logging;
-using ServerLibrary.Services.Contracts;
+using ServerLibrary.Services.Contracts.Validation;
 
-namespace ServerLibrary.Services.Implementations
+namespace ServerLibrary.Services.Implementations.Validation
 {
     public class EntityValidator<T>(IValidator<T> validator, ILogger<EntityValidator<T>> logger)
         : IEntityValidator<T>
