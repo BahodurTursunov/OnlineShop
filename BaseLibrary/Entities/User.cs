@@ -16,6 +16,7 @@ namespace BaseLibrary.Entities
         [Required(ErrorMessage = "Имя пользователя обязательно к заполнению")]
         [StringLength(30, ErrorMessage = "Имя пользователя не должно превышать 30 символов")]
         public string Username { get; set; } = string.Empty;
+
         public string FullName => $"{FirstName} {LastName}";
 
         [Required(ErrorMessage = "Email обязателен к заполнению")]
@@ -30,7 +31,6 @@ namespace BaseLibrary.Entities
 
         [JsonIgnore]
         public string AccessToken { get; set; } = string.Empty;
-
 
         [JsonIgnore]
         public Cart? Cart { get; set; } // корзина
